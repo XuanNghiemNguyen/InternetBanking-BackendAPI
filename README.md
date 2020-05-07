@@ -14,3 +14,4 @@
 
 type: `nodemon`
 host: [http://localhost:8080](http://localhost:8080)
+host : https://beapi-deloy-app.herokuapp.com/
