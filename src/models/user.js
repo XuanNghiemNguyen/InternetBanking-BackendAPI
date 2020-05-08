@@ -1,19 +1,26 @@
 const { Schema, model } = require('mongoose')
 
-const AccountSchema = new Schema(
+const Account = new Schema({
+  number: Number,
+  balance: Number
+})
+
+const UserSchema = new Schema(
   {
     type: { type: String, default: 'normal' },
     phone: String,
     name: String,
-    paymentAccount: { //just one payment account
-      number: Number,
-      balance: Number
+    payment: {
+      //just one payment account
+      type: Account,
+      default: null
     },
-    savingAccount: {
-      type: Array
+    saving: {
+      type: [Account],
+      default: []
     },
     password: String,
-    email: { type: String, default: 'Account@domain.com' },
+    email: { type: String, default: 'User@domain.com' },
     address: String,
     avatar: String,
     isEnabled: { type: Boolean, default: true },
@@ -26,4 +33,4 @@ const AccountSchema = new Schema(
   }
 )
 
-module.exports = model('Account', AccountSchema)
+module.exports = model('User', UserSchema)
