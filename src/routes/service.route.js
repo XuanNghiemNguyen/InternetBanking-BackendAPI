@@ -7,8 +7,8 @@ const User = require('../models/user')
 
 router.post('/info', async (req, res, next) => {
   try {
-    const { _id } = req.body
-    const user = await User.findById(_id)
+    const { number } = req.body
+    const user = await Account.findById(number)
     if (user) {
       return res.json({
         success: true,

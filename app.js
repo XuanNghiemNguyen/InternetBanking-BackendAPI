@@ -24,6 +24,7 @@ app.get('/', (req, res) => {
 })
 
 app.use('/services/accounts', isPartner, require('./src/routes/service.route'))
+app.use('/config', isPartner, require('./src/routes/config.route'))
 app.use('/static', express.static(path.join(__dirname, 'public')))
 
 //handle error
