@@ -8,7 +8,7 @@ const ventureBank = [
 
 const isPartner = (req, res, next) => {
   try {
-    const partnerCode = req.headers['partner-code']
+    const partnerCode = req.headers['partner-code'] || 'default'
     const bytes = CryptoJS.AES.decrypt(partnerCode, process.env.SERVICE_CODE)
     const bankName = bytes.toString(CryptoJS.enc.Utf8)
     if (bankName && ventureBank.includes(bankName)) {
