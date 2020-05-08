@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const User = require('../models/user')
+const Account = require('../models/account')
 // const nodersa = require('node-rsa')
 // const fs = require('fs')
 // const path = require('path')
@@ -8,11 +8,14 @@ const User = require('../models/user')
 router.post('/info', async (req, res, next) => {
   try {
     const { number } = req.body
-    const user = await Account.findById(number)
-    if (user) {
+    const account = await Account.findOne({ number })
+    if (account) {
       return res.json({
         success: true,
-        data: user
+        data: {
+          number: account.number,
+          balance: account.balance      
+        }
       })
     }
     return res.json({
