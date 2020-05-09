@@ -12,12 +12,17 @@ const isPartner = (req, res, next) => {
     if (!partnerCode || !ts || !signature || !content) {
       throw createError(403, 'missing information. Try again!')
     }
-    const ts_now = Date.now();
-    if ((ts_now - ts) / 1000 > 60) throw createError(403, 'this requirement is not accepted! Data is out of date !');
+    const ts_now = Date.now()
+    if (ts_now > ts && ts_now - ts > 60000) {
+      throw createError(
+        403,
+        'this requirement is not accepted! Data is out of date!'
+      )
+    }
     const bytes = CryptoJS.AES.decrypt(partnerCode, process.env.SERVICE_CODE)
     const bankName = bytes.toString(CryptoJS.enc.Utf8)
-    const sig = md5(ts + content + process.env.SERVICE_CODE);
-    
+    const sig = md5(ts + content + process.env.SERVICE_CODE)
+
     if (bankName && ventureBank.includes(bankName) && sig === signature) {
       req.bankName = bankName
       next()
