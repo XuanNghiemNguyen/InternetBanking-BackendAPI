@@ -6,9 +6,6 @@ const Account = require('../models/account')
 // const path = require('path')
 
 router.post('/info', async (req, res, next) => {
-
-
- 
   try {
     const { number } = req.body
     const account = await Account.findOne({ number })
@@ -17,7 +14,7 @@ router.post('/info', async (req, res, next) => {
         success: true,
         data: {
           number: account.number,
-          balance: account.balance      
+          balance: account.balance
         }
       })
     }
@@ -47,4 +44,3 @@ module.exports = router
 //   'utf8'
 // )
 // const original = new nodersa(privateKey).decrypt(encrypted, 'utf8')
-
