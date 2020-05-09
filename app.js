@@ -29,7 +29,11 @@ app.use('/static', express.static(path.join(__dirname, 'public')))
 
 //handle error
 app.use(function (err, req, res, next) {
-  return res.status(err.status).json(err)
+  return res.status(err.status).json({
+    success: false,
+    code: err.status,
+    ...err
+  })
 })
 
 // NOT FOUND API
