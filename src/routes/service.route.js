@@ -6,6 +6,9 @@ const Account = require('../models/account')
 // const path = require('path')
 
 router.post('/info', async (req, res, next) => {
+
+
+ 
   try {
     const { number } = req.body
     const account = await Account.findOne({ number })
