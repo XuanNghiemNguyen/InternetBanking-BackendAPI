@@ -8,14 +8,13 @@ const isPartner = (req, res, next) => {
     const partnerCode = req.headers['partner-code']
     const signature = req.headers['signature']
     const ts = req.headers['timestamp']
-    const { number } = req.body
-
-    if (!partnerCode || !ts || !signature || !number) {
+    const content = req.body
+    if (!partnerCode || !ts || !signature || !content) {
       throw createError(403, 'missing information. Try again!')
     }
     const bytes = CryptoJS.AES.decrypt(partnerCode, process.env.SERVICE_CODE)
     const bankName = bytes.toString(CryptoJS.enc.Utf8)
-    const sig = md5(ts + data.number + process.env.SERVICE_CODE)
+    const sig = md5(ts + content + process.env.SERVICE_CODE)
     if (bankName && ventureBank.includes(bankName) && sig === signature) {
       req.bankName = bankName
       next()
