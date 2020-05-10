@@ -7,7 +7,7 @@ const isPartner = (req, res, next) => {
   try {
     const partnerCode = req.headers['partner-code'] || 'default'
     const signature = req.headers['signature'] || 'default'
-    const ts = req.headers['timestamp'] || 0
+    const ts = +req.headers['timestamp'] || 0
     const content = req.body || 'default'
 
     //1. A kiểm tra lời gọi api có phải xuất phát từ B (đã đăng ký liên kết từ trước) hay không?
@@ -19,7 +19,7 @@ const isPartner = (req, res, next) => {
 
     //2. A kiểm tra xem lời gọi này là mới hay là thông tin cũ đã quá hạn?
     const ts_now = Date.now()
-    if (ts_now < ts || ts_now - ts > 60000) {
+    if (isNaN(ts) ||  ts_now < ts || ts_now - ts > 60000) {
       throw createError(402, 'This request has expired!')
     }
 
