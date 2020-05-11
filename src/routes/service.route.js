@@ -1,9 +1,27 @@
 const express = require('express')
 const router = express.Router()
 const Account = require('../models/account')
-// const nodersa = require('node-rsa')
-// const fs = require('fs')
-// const path = require('path')
+const crypto = require('crypto');
+const nodersa = require('node-rsa')
+const fs = require('fs')
+const path = require('path')
+
+const publicKey = fs.readFileSync(
+  path.resolve(__dirname + '/../utils/publicKey.pem'),
+  'utf8'
+)
+const privateKey = fs.readFileSync(
+  path.resolve(__dirname + '/../utils/privateKey.pem'),
+  'utf8'
+)
+
+// tạo chữ kí truyền vào post man
+const sign = crypto.createSign('SHA256');
+sign.update("206244692,200000");
+const signaturePrivate = sign.sign(privateKey, 'hex');
+console.log(signaturePrivate)
+
+
 
 router.post('/info', async (req, res, next) => {
   try {
@@ -29,7 +47,37 @@ router.post('/info', async (req, res, next) => {
     })
   }
 })
+router.post('/transfer', async (req, res, next) => {
+  try {
+    // console.log(req.bankName)
+    const { number, amount, sin } = req.body
+    console.log(number, amount, sin)
+    const account = await Account.findOne({ number })
+    const verify = crypto.createVerify('SHA256');
+    verify.write(`${number},${amount}`);
+    verify.end();
+    verify.verify(publicKey, sin, 'hex');
 
+    if (account && verify) {
+      return res.json({
+        success: true,
+        data: {
+          number: account.number,
+          balance: account.balance
+        }
+      })
+    }
+    return res.json({
+      success: false,
+      message: 'account not found!'
+    })
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.toString()
+    })
+  }
+})
 module.exports = router
 
 // const input = 'Nguyen Xuan Nghiem - 1612427'

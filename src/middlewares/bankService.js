@@ -19,14 +19,16 @@ const isPartner = (req, res, next) => {
 
     //2. A kiểm tra xem lời gọi này là mới hay là thông tin cũ đã quá hạn?
     const ts_now = Date.now()
-    if (isNaN(ts) ||  ts_now < ts || ts_now - ts > 60000) {
+    if (isNaN(ts) ||  ts_now < ts || ts_now - ts > 6000000) {
       throw createError(402, 'This request has expired!')
     }
 
     //3. A kiểm tra xem gói tin B gửi qua là gói tin nguyên bản hay gói tin đã bị chỉnh sửa?
     const sig = md5(ts + content + process.env.SERVICE_CODE)
     if (sig !== signature) {
+      console.log(sig)
       throw createError(403, 'The requested content is no longer intact!')
+      
     }
 
     req.bankName = bankName
