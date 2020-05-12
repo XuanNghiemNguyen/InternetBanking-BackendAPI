@@ -26,7 +26,7 @@ const isPartner = (req, res, next) => {
     //3. A kiểm tra xem gói tin B gửi qua là gói tin nguyên bản hay gói tin đã bị chỉnh sửa?
     const sig = md5(ts + content + process.env.SERVICE_CODE)
     if (sig !== signature) {
-      console.log(sig)
+      console.log(`Sig: ${sig}, ${signature}`)
       throw createError(403, 'The requested content is no longer intact!')
       
     }

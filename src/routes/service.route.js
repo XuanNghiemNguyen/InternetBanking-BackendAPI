@@ -16,11 +16,14 @@ const privateKey = fs.readFileSync(
 )
 
 // tạo chữ kí truyền vào post man
-const sign = crypto.createSign('SHA256');
-sign.update("206244692,200000");
-const signaturePrivate = sign.sign(privateKey, 'hex');
-console.log(signaturePrivate)
-
+const key = new nodersa(publicKey)
+const encrypted = key.encrypt(
+  {
+  "number":"206244691",
+  "amount":"15000"
+  }, 
+  'base64')
+console.log(encrypted)// truyền vào postman encryptedString body
 
 
 router.post('/info', async (req, res, next) => {
@@ -49,22 +52,29 @@ router.post('/info', async (req, res, next) => {
 })
 router.post('/transfer', async (req, res, next) => {
   try {
-    // console.log(req.bankName)
-    const { number, amount, sin } = req.body
-    console.log(number, amount, sin)
+    console.log(req.bankName)
+    const partnerKey = fs.readFileSync(
+      path.resolve(__dirname + `/../utils/partner-key/${req.bankName}-PublicKey.pem`),
+      'utf8'
+    )
+    const { encryptedString } = req.body
+    const original = new nodersa(privateKey).decrypt(encryptedString, 'utf8')
+    const data = JSON.parse(original)
+    const {number} = data
     const account = await Account.findOne({ number })
-    const verify = crypto.createVerify('SHA256');
-    verify.write(`${number},${amount}`);
-    verify.end();
-    verify.verify(publicKey, sin, 'hex');
-
-    if (account && verify) {
+    if (account) {
+      const respondKey = new nodersa(partnerKey)
+      const encrypted = respondKey.encrypt(
+        {
+          success: true,
+          data: {
+            number: account.number,
+            balance: account.balance
+          }
+        }, 
+        'base64')
       return res.json({
-        success: true,
-        data: {
-          number: account.number,
-          balance: account.balance
-        }
+        encryptedString: encrypted
       })
     }
     return res.json({
