@@ -25,6 +25,7 @@
     "morgan": "~1.9.1",
     "node-rsa": "^1.0.8",
     "nodemon": "^2.0.2",
+    "openpgp": "^4.10.4",
     "uuidv4": "^6.0.6"
   },
   "author": "XuanNghiemNguyen",
