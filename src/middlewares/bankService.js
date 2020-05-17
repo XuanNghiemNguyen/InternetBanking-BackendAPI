@@ -1,7 +1,7 @@
 const createError = require('http-errors')
 const CryptoJS = require('crypto-js')
 const md5 = require('md5')
-const ventureBank = ['VPBank', 'Agribank']
+const ventureBank = ['vpbank', 'agribank']
 
 const isPartner = (req, res, next) => {
   try {
@@ -27,7 +27,6 @@ const isPartner = (req, res, next) => {
     const sig = md5(ts + content + process.env.SERVICE_CODE)
     if (sig !== signature) {
       throw createError(403, 'The requested content is no longer intact!')
-
     }
 
     req.bankName = bankName
