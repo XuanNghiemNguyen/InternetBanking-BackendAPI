@@ -1,8 +1,5 @@
 const partnerEncryptMethod = {
-    agribank: 'PGP',
-    vpbank: 'RSA',
-    eximbank: 'PGP',
-    bidv: 'RSA',
-    ocb: 'PGP'
+    agribank: 'RSA',
+    hhbank: 'PGP'
   }
   module.exports = partnerEncryptMethod
