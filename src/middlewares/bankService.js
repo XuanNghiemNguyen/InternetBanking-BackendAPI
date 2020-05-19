@@ -1,7 +1,8 @@
 const createError = require('http-errors')
 const CryptoJS = require('crypto-js')
 const md5 = require('md5')
-const ventureBank = ['VPBank', 'Agribank']
+const { PARTNER_ENCRYPT_METHOD } = require('../utils/partner-Encrypt-Method')
+const ventureBank = Object.keys(PARTNER_ENCRYPT_METHOD)
 
 const isPartner = (req, res, next) => {
   try {
@@ -19,7 +20,7 @@ const isPartner = (req, res, next) => {
 
     //2. A kiểm tra xem lời gọi này là mới hay là thông tin cũ đã quá hạn?
     const ts_now = Date.now()
-    if (isNaN(ts) ||  ts_now < ts || ts_now - ts > 60000) {
+    if (isNaN(ts) || ts_now < ts || ts_now - ts > 60000) {
       throw createError(402, 'This request has expired!')
     }
 
