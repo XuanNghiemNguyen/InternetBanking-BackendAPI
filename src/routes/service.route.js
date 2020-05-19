@@ -93,10 +93,10 @@ router.post('/transfer', async (req, res) => {
     switch (METHOD) {
       case 'PGP':
         openpgp.initWorker({ path: 'openpgp.worker.js' })
-        encrypted = await openpgp.encrypt({
+        encrypted = (await openpgp.encrypt({
           message: openpgp.message.fromText(JSON.stringify(result)),
           publicKeys: (await openpgp.key.readArmored(partnerKey)).keys
-        }).data
+        })).data
         break
       case 'RSA':
         const resultKey = new NodeRSA(partnerKey)
