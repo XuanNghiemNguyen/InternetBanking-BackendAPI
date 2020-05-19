@@ -9,7 +9,7 @@ const path = require('path')
 const {
   PARTNER_ENCRYPT_METHOD,
   SECURITY_FORM
-} = require('../utils/partner-Encrypt-Method')
+} = require('../utils/security/partner-Encrypt-Method')
 
 router.post('/info', async (req, res) => {
   try {

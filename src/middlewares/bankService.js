@@ -1,7 +1,7 @@
 const createError = require('http-errors')
 const CryptoJS = require('crypto-js')
 const md5 = require('md5')
-const { PARTNER_ENCRYPT_METHOD } = require('../utils/partner-Encrypt-Method')
+const { PARTNER_ENCRYPT_METHOD } = require('../utils/security/partner-Encrypt-Method')
 const ventureBank = Object.keys(PARTNER_ENCRYPT_METHOD)
 
 const isPartner = (req, res, next) => {
