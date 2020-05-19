@@ -65,7 +65,6 @@ router.post('/insertData', async (req, res) => {
       user: newUser
     })
   } catch (error) {
-    console.log(error)
     return res.status(500).json({
       success: false,
       message: error.toString()

@@ -11,48 +11,44 @@ const privateKey = fs.readFileSync(
 )
 const original = new nodersa(privateKey).decrypt(encrypted, 'utf8')
 
-
 // tạo chữ ký, dữ liệu của đối tác để truyền vào post man
 const publicKey = fs.readFileSync(
-  path.resolve(__dirname + "/../utils/publicKey.pem"),
-  "utf8"
-);
-const key = new nodersa(publicKey);
+  path.resolve(__dirname + '/../utils/publicKey.pem'),
+  'utf8'
+)
+const key = new nodersa(publicKey)
 const encrypted = key.encrypt(
   {
-    number: "206244699",
-    amount: "75000",
+    number: '206244699',
+    amount: '75000'
   },
-  "base64"
-);
-console.log(encrypted);
+  'base64'
+)
+console.log(encrypted)
 
 //test return rsa
 const p = fs.readFileSync(
-  path.resolve(__dirname + "/../utils/partner-key/agribank-PrivateKey.pem"),
-  "utf8"
-);
-const original = new nodersa(p).decrypt(encrypted, "utf8");
-console.log(original);
-
-
+  path.resolve(__dirname + '/../utils/partner-key/agribank-PrivateKey.pem'),
+  'utf8'
+)
+const original = new nodersa(p).decrypt(encrypted, 'utf8')
+console.log(original)
 
 // test return pgp
-const privateKeyArmored =fs.readFileSync(
-    path.resolve(
-      __dirname + `/../utils/partner-key/${req.bankName}-PrivateKey.pem`
-    ),
-    "utf8"
-  );
+const privateKeyArmored = fs.readFileSync(
+  path.resolve(
+    __dirname + `/../utils/partner-key/${req.bankName}-PrivateKey.pem`
+  ),
+  'utf8'
+)
 
+const {
+  keys: [privateKey]
+} = await openpgp.key.readArmored(privateKeyArmored)
+await privateKey.decrypt('12345')
 
-  const {
-    keys: [privateKey],
-  } = await openpgp.key.readArmored(privateKeyArmored);
-  await privateKey.decrypt("12345");
-
-  const { data: decrypted } = await openpgp.decrypt({
-    message: await openpgp.message.readArmored(encrypted), // parse armored message
-    privateKeys: [privateKey], // for decryption
-  });
-  console.log(decrypted);
+const { data: decrypted } = await openpgp.decrypt({
+  message: await openpgp.message.readArmored(encrypted), // parse armored message
+  privateKeys: [privateKey] // for decryption
+})
+console.log(decrypted)
