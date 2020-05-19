@@ -96,7 +96,7 @@ router.post('/transfer', async (req, res) => {
         encrypted = await openpgp.encrypt({
           message: openpgp.message.fromText(JSON.stringify(result)),
           publicKeys: (await openpgp.key.readArmored(partnerKey)).keys
-        }).data.encrypted
+        }).data
         break
       case 'RSA':
         const resultKey = new NodeRSA(partnerKey)
