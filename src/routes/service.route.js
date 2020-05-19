@@ -89,23 +89,26 @@ router.post('/transfer', async (req, res) => {
     }
 
     //return results
-    if (METHOD === 'PGP') {
-      openpgp.initWorker({ path: 'openpgp.worker.js' })
-      const { data: encrypted } = await openpgp.encrypt({
-        message: openpgp.message.fromText(JSON.stringify(result)),
-        publicKeys: (await openpgp.key.readArmored(partnerKey)).keys
-      })
-      return res.json({
-        encryptedMessage: encrypted
-      })
+    let encrypted = 'This is encrypt string!'
+    switch (METHOD) {
+      case 'PGP':
+        openpgp.initWorker({ path: 'openpgp.worker.js' })
+        encrypted = await openpgp.encrypt({
+          message: openpgp.message.fromText(JSON.stringify(result)),
+          publicKeys: (await openpgp.key.readArmored(partnerKey)).keys
+        }).data.encrypted
+        break
+      case 'RSA':
+        const resultKey = new NodeRSA(partnerKey)
+        encrypted = resultKey.encrypt(result, 'base64')
+        break
+
+      default:
+        break
     }
-    if (METHOD === 'RSA') {
-      const resultKey = new NodeRSA(partnerKey)
-      const encrypted = resultKey.encrypt(result, 'base64')
-      return res.json({
-        encryptedMessage: encrypted
-      })
-    }
+    return res.json({
+      encryptedMessage: encrypted
+    })
   } catch (error) {
     return res.status(500).json({
       success: false,
