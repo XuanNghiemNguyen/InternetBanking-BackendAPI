@@ -1,3 +1,4 @@
+
 const express = require('express')
 const router = express.Router()
 const Account = require('../models/account')
@@ -6,53 +7,55 @@ const openpgp = require('openpgp')
 const fs = require('fs')
 const path = require('path')
 
-router.post('/info', async (req, res) => {
+
+router.post("/info", async (req, res) => {
   try {
-    console.log(req.body)
-    const { number } = req.body
-    const account = await Account.findOne({ number })
+    console.log(req.body);
+    const { number } = req.body;
+    const account = await Account.findOne({ number });
     if (account) {
       return res.json({
         success: true,
         data: {
           number: account.number,
-          balance: account.balance
-        }
-      })
+          balance: account.balance,
+        },
+      });
     }
     return res.json({
       success: false,
-      message: 'account not found!'
-    })
+      message: "account not found!",
+    });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.toString()
-    })
+      message: error.toString(),
+    });
   }
-})
+});
 
-router.post('/transfer', async (req, res) => {
-  
+
+router.post("/transfer", async (req, res) => {
   try {
+    console.log(req.body);
     //get content
-    const { number, amount, signatureMessage } = req.body
-    const { method, partnerKey } = req.ventureInfo
+    const { number, amount, signatureMessage } = req.body;
+    const { method, partnerKey } = req.body.ventureInfo;
     let response = {
       success: false,
-      data: {}
-    }
+      data: {},
+    };
     if (isNaN(number) || isNaN(amount)) {
       response = {
         success: false,
-        message: 'Number or Amount should be a number!'
-      }
+        message: "Number or Amount should be a number!",
+      };
     } else {
       if (!signatureMessage) {
         response = {
           success: false,
-          message: 'Signature Message is required!'
-        }
+          message: "Signature Message is required!",
+        };
       } else {
         // verify signatureMessage with data and publicKey
 
@@ -90,10 +93,10 @@ router.post('/transfer', async (req, res) => {
           }
         }
         //transfer
-        const account = await Account.findOne({ number })
+        const account = await Account.findOne({ number });
         if (account) {
-          account.balance = parseInt(amount) + parseInt(account.balance)
-          account.save()
+          account.balance = parseInt(amount) + parseInt(account.balance);
+          account.save();
           response = {
             success: true,
             data: {
@@ -104,53 +107,56 @@ router.post('/transfer', async (req, res) => {
         } else {
           response = {
             success: false,
-            message: 'Account not found'
-          }
+            message: "Account not found",
+          };
         }
       }
     }
 
     //return results
+    let encryptedMessageResponse = "This is encrypted Message Response!";
+    let signatureResponse = "This is signature Response!";
     const privateKey = fs.readFileSync(
-      path.resolve(__dirname + '/../utils/security/privateKey.pem'),
+      path.resolve(__dirname + '/../utils/privateKey.pem'),
       'utf8'
     )
-    let encryptedMessageResponse = 'This is encrypted Message Response!'
-    let signatureResponse = 'This is signature Response!'
+    const data = {
+      number,
+      amount,
+    };
+    const mySig = privateKey.sign(data, 'utf8', 'base64');
     switch (method) {
-      case 'PGP':
-        openpgp.initWorker({ path: 'openpgp.worker.js' })
+      case "PGP":
+        openpgp.initWorker({ path: "openpgp.worker.js" });
         encryptedMessageResponse = (
           await openpgp.encrypt({
             message: openpgp.message.fromText(JSON.stringify(response)),
-            publicKeys: (await openpgp.key.readArmored(partnerKey)).keys
+            publicKeys: (await openpgp.key.readArmored(partnerKey)).keys,
           })
-        ).data
-        // Thêm bước ký tên: signatureResponse
-        break
-      case 'RSA':
-        const resultKey = new NodeRSA(partnerKey)
-        encryptedMessageResponse = resultKey.encrypt(response, 'base64')
-        // Thêm bước ký tên: signatureResponse
-
-        break
+        ).data;
+        signatureResponse=mySig 
+        break;
+      case "RSA":
+        const resultKey = new NodeRSA(partnerKey);
+        encryptedMessageResponse = resultKey.encrypt(response, "base64");
+        signatureResponse=mySig 
+        break;
 
       default:
-        break
+        break;
     }
     const key = new NodeRSA(privateKey)
     signatureResponse = key.sign(response, 'base64', 'utf8');
     return res.json({
       encryptedMessageResponse,
-      //Thêm chữ ký nếu cần: signatureResponse
-      signatureResponse
-    })
+      signatureResponse 
+    });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.toString()
-    })
+      message: error.toString(),
+    });
   }
-})
+});
 
-module.exports = router
+module.exports = router;
