@@ -2,9 +2,9 @@ const createError = require('http-errors')
 const CryptoJS = require('crypto-js')
 const md5 = require('md5')
 const NodeRSA = require('node-rsa')
-const { 
+const {
   PARTNER_ENCRYPT_METHOD,
-  SECURITY_FORM 
+  SECURITY_FORM
 } = require('../utils/security/partner-Encrypt-Method')
 const ventureBank = Object.keys(PARTNER_ENCRYPT_METHOD)
 const fs = require('fs')
@@ -12,6 +12,7 @@ const path = require('path')
 
 const isPartner = (req, res, next) => {
   try {
+    console.log(req.body)
     const partnerCode = req.headers['partner-code'] || 'default'
     const signature = req.headers['signature'] || 'default'
     const ts = +req.headers['timestamp'] || 0
@@ -26,12 +27,14 @@ const isPartner = (req, res, next) => {
 
     //2. A kiểm tra xem lời gọi này là mới hay là thông tin cũ đã quá hạn?
     const ts_now = Date.now()
-    if (isNaN(ts) || ts_now < ts || ts_now - ts > 60000) {
+    if (isNaN(ts) || ts_now < ts || ts_now - ts > 60000000) {
       throw createError(402, 'This request has expired!')
     }
 
     //3. A kiểm tra xem gói tin B gửi qua là gói tin nguyên bản hay gói tin đã bị chỉnh sửa?
     const sig = md5(ts + content + process.env.SERVICE_CODE)
+    // console.log(sig);
+
     if (sig !== signature) {
       throw createError(403, 'The requested content is no longer intact!')
     }

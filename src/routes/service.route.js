@@ -3,6 +3,8 @@ const router = express.Router()
 const Account = require('../models/account')
 const NodeRSA = require('node-rsa')
 const openpgp = require('openpgp')
+const fs = require('fs')
+const path = require('path')
 
 router.post('/info', async (req, res) => {
   try {
@@ -31,11 +33,11 @@ router.post('/info', async (req, res) => {
 })
 
 router.post('/transfer', async (req, res) => {
+  
   try {
-    console.log(req.body)
     //get content
     const { number, amount, signatureMessage } = req.body
-    const { method, partnerKey } = req.body.ventureInfo
+    const { method, partnerKey } = req.ventureInfo
     let response = {
       success: false,
       data: {}
@@ -53,20 +55,40 @@ router.post('/transfer', async (req, res) => {
         }
       } else {
         // verify signatureMessage with data and publicKey
-        // const data = {
-        //   number,
-        //   amount
-        // }
-        // switch (method) {
-        //   case 'PGP':
-        //     break
-        //   case 'PGP':
-        //     break
-        //   default:
-        //     break
-        // }
-        //...
 
+        const data = {
+          number,
+          amount
+        }
+        const valid = false
+        switch (method) {
+          case 'RSA':
+            {
+              const key = new NodeRSA(partnerKey)
+              valid = key.verify(data, signatureMessage, 'base64', 'utf8')
+              console.log(verified);
+            }
+            break
+          case 'PGP':
+            {
+              const verified = await openpgp.verify({
+                message: openpgp.cleartext.fromText(JSON.stringify(data)),
+                signature: await openpgp.signature.readArmored(signatureMessage),
+                publicKeys: (await openpgp.key.readArmored(partnerKey)).keys
+              });
+              valid = verified.signatures[0]
+            }
+            break
+          default:
+            break
+        }
+
+        if (!verified) {
+          response = {
+            success: false,
+            message: 'Not Verified'
+          }
+        }
         //transfer
         const account = await Account.findOne({ number })
         if (account) {
@@ -76,7 +98,7 @@ router.post('/transfer', async (req, res) => {
             success: true,
             data: {
               number: account.number,
-              balance: account.balance
+              username: account.username
             }
           }
         } else {
@@ -89,6 +111,10 @@ router.post('/transfer', async (req, res) => {
     }
 
     //return results
+    const privateKey = fs.readFileSync(
+      path.resolve(__dirname + '/../utils/security/privateKey.pem'),
+      'utf8'
+    )
     let encryptedMessageResponse = 'This is encrypted Message Response!'
     let signatureResponse = 'This is signature Response!'
     switch (method) {
@@ -106,14 +132,18 @@ router.post('/transfer', async (req, res) => {
         const resultKey = new NodeRSA(partnerKey)
         encryptedMessageResponse = resultKey.encrypt(response, 'base64')
         // Thêm bước ký tên: signatureResponse
+
         break
 
       default:
         break
     }
+    const key = new NodeRSA(privateKey)
+    signatureResponse = key.sign(response, 'base64', 'utf8');
     return res.json({
-      encryptedMessageResponse
+      encryptedMessageResponse,
       //Thêm chữ ký nếu cần: signatureResponse
+      signatureResponse
     })
   } catch (error) {
     return res.status(500).json({
