@@ -52,3 +52,17 @@ const { data: decrypted } = await openpgp.decrypt({
   privateKeys: [privateKey] // for decryption
 })
 console.log(decrypted)
+
+
+// tạo chữ kí PGP
+const PGPKey = fs.readFileSync(
+  path.resolve(__dirname + '/../utils/partner-key/hhbank-PrivateKey.pem'),
+  'utf8'
+)
+const { keys: [PGPprivateKey] } = await openpgp.key.readArmored(PGPKey);
+await PGPprivateKey.decrypt('12345');
+const { data: cleartext } = await openpgp.sign({
+  message: openpgp.cleartext.fromText(JSON.stringify({ number: '206244699', amount: '75000' })), // CleartextMessage or Message object
+  privateKeys: [PGPprivateKey]                             // for signing
+});
+// console.log(cleartext); // '-----BEGIN PGP SIGNED MESSAGE ... END PGP SIGNATURE-----'
