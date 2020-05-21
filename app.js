@@ -32,7 +32,7 @@ app.use(function (err, req, res, next) {
   return res.status(err.status).json({
     success: false,
     code: err.status,
-    err: err.toString()
+    message: err.message || err
   })
 })
 
