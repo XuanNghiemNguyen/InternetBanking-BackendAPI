@@ -1,26 +1,41 @@
 const express = require('express')
 const router = express.Router()
 const Account = require('../models/account')
+const User = require('../models/user')
 const NodeRSA = require('node-rsa')
 
 router.post('/info', async (req, res) => {
   try {
     const { number } = req.body
+    let response = {}
     const account = await Account.findOne({ number })
     if (account) {
-      return res.json({
-        success: true,
-        data: {
-          name: account.name,
-          number: account.number,
-          address: account.address
+      const user = await User.findOne({ owner: account.username })
+      if (user) {
+        response = {
+          success: true,
+          data: {
+            name: user.name,
+            username: user.username,
+            email: user.email,
+            phone: user.phone
+          }
         }
-      })
+      } else {
+        response = {
+          success: false,
+          message: 'User not found!'
+        }
+      }
+    } else {
+      response = {
+        success: false,
+        message: 'Account not found!'
+      }
     }
-    return res.json({
-      success: false,
-      message: 'account not found!'
-    })
+    const { publicKey_Partner } = req.ventureInfo
+    const messageResponse = publicKey_Partner.encrypt(response, 'base64')
+    return res.json({ messageResponse })
   } catch (error) {
     return res.status(500).json({
       success: false,
