@@ -10,13 +10,12 @@ router.post('/info', async (req, res) => {
     let response = {}
     const account = await Account.findOne({ number })
     if (account) {
-      const user = await User.findOne({ owner: account.username })
+      const user = await User.findOne({ owner: account.email })
       if (user) {
         response = {
           success: true,
           data: {
             name: user.name,
-            username: user.username,
             email: user.email,
             phone: user.phone
           }

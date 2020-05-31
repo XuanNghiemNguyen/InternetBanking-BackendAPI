@@ -32,24 +32,24 @@ const savingAccounts = [
 ]
 
 const userData = {
-  username: 'xuanghjem',
   type: 'normal',
+  email: 'xuanghjem@gmail.com',
   phone: '+84985002876',
   name: 'Nguyễn Xuân Nghiêm',
-  password: '123456'
+  password: '$2a$10$Sd8St7kVtmCM4RO397i5c.PdcBjlJnYWixPOkKb2BwmC5lCVi3KZm'
 }
 
 router.post('/insertData', async (req, res) => {
   try {
     let newPayment = new Account({
       ...paymentAccount,
-      owner: userData.username
+      owner: userData.email
     })
     await newPayment.save()
     await Promise.all([savingAccounts.forEach(async item => {
       let newSaving = new Account({
         ...item,
-        owner: userData.username,
+        owner: userData.email,
         isPayment: false
       })
       await newSaving.save()

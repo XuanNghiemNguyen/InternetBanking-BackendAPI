@@ -23,9 +23,12 @@ app.get('/', (req, res) => {
   res.send('Sacombank Internet Banking API')
 })
 
-app.use('/services/accounts', isPartner, require('./src/routes/service.route'))
-app.use('/config', isPartner, require('./src/routes/config.route'))
 app.use('/static', express.static(path.join(__dirname, 'public')))
+app.use('/config', require('./src/routes/config.route'))
+
+app.use('/services/accounts', isPartner, require('./src/routes/service.route'))
+app.use('/', require('./src/routes/common.route'))
+
 
 //handle error
 app.use(function (err, req, res, next) {
@@ -44,6 +47,7 @@ app.use((req, res, next) => {
 //connect database
 const uri = `mongodb+srv://XuanNghiemNguyen:${process.env.DB_PASSWORD}@cluster0-6az1w.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`
 const connectDatabase = () => {
+  mongoose.set('useCreateIndex', true)
   mongoose.connect(
     uri,
     {

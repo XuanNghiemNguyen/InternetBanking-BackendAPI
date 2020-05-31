@@ -24,6 +24,7 @@ const isPartner = (req, res, next) => {
 
     //2. A kiểm tra xem lời gọi này là mới hay là thông tin cũ đã quá hạn?
     const ts_now = Date.now()
+    console.log(typeof (process.env.TIMEOUT*1000))
     if (isNaN(ts) || ts_now < ts || ts_now - ts > process.env.TIMEOUT * 1000) {
       throw createError(402, 'This request has expired!')
     }
