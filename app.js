@@ -6,6 +6,7 @@ const dotenv = require('dotenv')
 const mongoose = require('mongoose')
 const cors = require('cors')
 const { isPartner } = require('./src/middlewares/bankService')
+const { auth } = require('./src/middlewares/auth')
 require('express-async-errors')
 
 //Init Express App
@@ -28,6 +29,7 @@ app.use('/config', require('./src/routes/config.route'))
 
 app.use('/services/accounts', isPartner, require('./src/routes/service.route'))
 app.use('/', require('./src/routes/common.route'))
+app.use('/users', require('./src/routes/user.route'))
 
 
 //handle error
