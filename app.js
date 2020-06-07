@@ -6,7 +6,7 @@ const dotenv = require('dotenv')
 const mongoose = require('mongoose')
 const cors = require('cors')
 const { isPartner } = require('./src/middlewares/bankService')
-const { auth } = require('./src/middlewares/auth')
+const { isAuthenticated } = require('./src/middlewares/auth')
 require('express-async-errors')
 
 //Init Express App
@@ -29,7 +29,7 @@ app.use('/config', require('./src/routes/config.route'))
 
 app.use('/services/accounts', isPartner, require('./src/routes/service.route'))
 app.use('/', require('./src/routes/common.route'))
-app.use('/users', require('./src/routes/user.route'))
+app.use('/users',   isAuthenticated, require('./src/routes/user.route'))
 
 
 //handle error
@@ -45,6 +45,9 @@ app.use(function (err, req, res, next) {
 app.use((req, res, next) => {
   res.status(404).send('NOT FOUND')
 })
+
+
+
 
 //connect database
 const uri = `mongodb+srv://XuanNghiemNguyen:${process.env.DB_PASSWORD}@cluster0-6az1w.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`
