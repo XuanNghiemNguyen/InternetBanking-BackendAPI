@@ -10,6 +10,12 @@ const nodemailer = require('nodemailer')
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
+    if (!email || password) {
+      return res.json({
+        success: false,
+        message: 'Email and password are required!'
+      })
+    }
     User.findOne({ email }).then(async (user) => {
       if (user) {
         if (!user.isEnabled) {
