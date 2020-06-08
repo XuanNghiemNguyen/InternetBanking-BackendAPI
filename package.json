@@ -24,6 +24,7 @@
     "mongoose": "^5.9.3",
     "morgan": "~1.9.1",
     "node-rsa": "^1.0.8",
+    "nodemailer": "^6.4.8",
     "nodemon": "^2.0.2",
     "openpgp": "^4.10.4",
     "rand-token": "^1.0.1",

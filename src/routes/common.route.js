@@ -1,8 +1,11 @@
 const express = require('express')
 const router = express.Router()
 const User = require('../models/user')
+const User_Verify = require('../models/verify')
+const { getRandomCode } = require('../common/index')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
+const nodemailer = require('nodemailer')
 
 router.post('/login', async (req, res) => {
   try {
@@ -38,7 +41,7 @@ router.post('/login', async (req, res) => {
               user
             })
           } else {
-            return res.status(400).json({
+            return res.json({
               success: false,
               message: 'Password is incorrect!'
             })
@@ -59,17 +62,136 @@ router.post('/login', async (req, res) => {
   }
 })
 
+router.post('/getOTPChangingPassword', async (req, res) => {
+  try {
+    const { email } = req.body
+    if (!email) {
+      return res.json({
+        success: false,
+        message: 'Email is required!'
+      })
+    }
+    const user = await User.findOne({ email })
+    if (user) {
+      const OTP_CODE = getRandomCode()
+      await User_Verify.updateMany(
+        { email, isUsed: false },
+        { $set: { isUsed: true } }
+      )
+      const newVerify = new User_Verify()
+      newVerify.email = email
+      newVerify.verifiedCode = OTP_CODE
+      await newVerify.save()
+      const transporter = nodemailer.createTransport({
+        // config mail server
+        service: 'Gmail',
+        auth: {
+          user: process.env.USER_NAME,
+          pass: process.env.PASSWORD
+        }
+      })
+      const mainOptions = {
+        // thiết lập đối tượng, nội dung gửi mail
+        from: 'Hệ thống ngân hàng điện tử SACOMBANK',
+        to: email,
+        subject: '[SACOMBANK INTERNET BANKING] Yêu cầu đổi mật khẩu',
+        text: 'You recieved message from ' + req.body.email,
+        html: `
+            <h3>Xin chào <b> ${user.name}</b>, </h3>
+            <p>Ngân hàng chúng tôi vừa nhận được yêu cầu đổi mật khẩu từ bạn vào lúc ${new Date().toLocaleTimeString()} cùng ngày. Nếu bạn không thực hiện, vui lòng bỏ qua E-mail này!</p>
+            <p>Mã OTP của bạn là: <h3>${OTP_CODE}</h3></p>
+            <p>Bạn không nên chia sẻ mã này cho bất kì ai, kể cả nhân viên của ngân hàng chúng tôi.</p>
+            <h5>Trân trọng cảm ơn!<h5>
+            <h5>Hệ thống ngân hàng điện tử SACOMBANK<h5>
+          `
+      }
+      setTimeout(() => {
+        console.log('sending...!')
+      }, 2000)
+      transporter.sendMail(mainOptions, function (err, info) {
+        if (err) {
+          return res.status(500).json({
+            success: false,
+            message: err.toString()
+          })
+        } else {
+          return res.json({
+            success: true,
+            message: info.response
+          })
+        }
+      })
+    } else {
+      return res.json({
+        success: false,
+        message: 'user not found!'
+      })
+    }
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.toString()
+    })
+  }
+})
+
+router.post('/verifyCode', async (req, res) => {
+  try {
+    const { email, code } = req.body
+    if (!code || !email) {
+      return res.json({
+        success: false,
+        message: 'code is required!'
+      })
+    }
+    const verify = await User_Verify.findOne({ email, isUsed: false })
+    const user = await User.findOne({ email })
+    if (verify && user) {
+      if (verify.verifiedCode == code) {
+        verify.isUsed = true
+        await verify.save()
+        const token = jwt.sign(
+          { userId: user._id, type: user.type },
+          process.env.JWT_KEY,
+          {
+            expiresIn: '5m'
+          }
+        )
+        return res.json({
+          success: true,
+          token
+        })
+      } else {
+        return res.json({
+          success: false,
+          message: 'This code is incorrect!'
+        })
+      }
+    } else {
+      return res.json({
+        success: false,
+        message: 'There are no codes sent!'
+      })
+    }
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.toString()
+    })
+  }
+})
+
 // router.post('/register', async (req, res, next) => {
 //   try {
 //     const { email, password, name } = req.body
 //     if (!email || !password || !name) {
-//       return res.status(400).json({
+//       return res.json({
 //         success: false,
 //         message: 'email, password, name are required!'
 //       })
 //     }
 //     if (!emailNumberVerify.test(email)) {
-//       return res.status(400).json({
+//       return res.json({
 //         success: false,
 //         message: 'invalid email number!'
 //       })
@@ -126,7 +248,7 @@ router.post('/login', async (req, res) => {
 //   try {
 //     const { accessToken, refreshToken } = req.body
 //     if (!accessToken || !refreshToken) {
-//       return res.status(400).json({
+//       return res.json({
 //         success: false,
 //         message: 'accessToken, refreshToken are required!'
 //       })
@@ -139,7 +261,7 @@ router.post('/login', async (req, res) => {
 //       },
 //       async (err, payload) => {
 //         if (err) {
-//           return res.status(400).json({
+//           return res.json({
 //             success: false,
 //             message: err
 //           })
@@ -147,13 +269,13 @@ router.post('/login', async (req, res) => {
 //         const { userId } = payload
 //         const user = await User.findById(userId)
 //         if (!user || !user.isEnabled) {
-//           return res.status(400).json({
+//           return res.json({
 //             success: false,
 //             message: 'this account not found or was blocked!'
 //           })
 //         }
 //         if (user.refreshToken !== refreshToken) {
-//           return res.status(400).json({
+//           return res.json({
 //             success: false,
 //             message: 'refreshToken is incorrect!'
 //           })

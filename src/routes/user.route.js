@@ -2,14 +2,13 @@ const express = require('express')
 const router = express.Router()
 const User = require('../models/user')
 const Account = require('../models/account')
-const jwt = require('jsonwebtoken')
-const createError = require('http-errors')
+const bcrypt = require('bcryptjs')
 
 router.get('/getListAccount', async (req, res) => {
   try {
     const { email } = req.query
     if (!email) {
-      return res.status(400).json({
+      return res.json({
         success: false,
         message: 'Email is required!'
       })
@@ -18,6 +17,43 @@ router.get('/getListAccount', async (req, res) => {
     return res.json({
       success: true,
       results: accounts
+    })
+  } catch (err) {
+    console.log(err)
+    return res.status(500).json({
+      success: false,
+      message: err.toString()
+    })
+  }
+})
+router.post('/forgotPassword', async (req, res) => {
+  try {
+    const { userId } = req.tokenPayload
+    const { password_1, password_2 } = req.body
+    if (!password_1 || !password_2) {
+      return res.json({
+        success: false,
+        message: 'password_1 and password_2 are required!'
+      })
+    }
+    if (password_1 !== password_2) {
+      return res.json({
+        success: false,
+        message: 'password_1 and password_2 are not the same!'
+      })
+    }
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.json({
+        success: false,
+        message: 'user not found!'
+      })
+    }
+    user.password = await bcrypt.hash(password_1, 10)
+    await user.save()
+    return res.json({
+      success: true,
+      message: 'change password successfully!'
     })
   } catch (err) {
     console.log(err)
