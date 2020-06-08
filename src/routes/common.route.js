@@ -62,9 +62,9 @@ router.post('/login', async (req, res) => {
   }
 })
 
-router.post('/getOTPChangingPassword', async (req, res) => {
+router.get('/getOTPChangingPassword', async (req, res) => {
   try {
-    const { email } = req.body
+    const { email } = req.query
     if (!email) {
       return res.json({
         success: false,
