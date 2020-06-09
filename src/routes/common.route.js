@@ -6,7 +6,7 @@ const { getRandomCode } = require('../common/index')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const nodemailer = require('nodemailer')
-
+const moment = require('moment')
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
@@ -69,6 +69,12 @@ router.post('/login', async (req, res) => {
 })
 
 router.get('/getOTPChangingPassword', async (req, res) => {
+  const now = new Date().toLocaleString('en-US', {
+    timeZone: 'Asia/Ho_Chi_Minh'
+  })
+  const time = now.split(', ')[1]
+  const date = now.split(', ')[0].split('/')
+  const dateString = `${time} - ngày ${date[1]}, tháng ${date[0]}, năm ${date[2]}`
   try {
     const { email } = req.query
     if (!email) {
@@ -80,14 +86,6 @@ router.get('/getOTPChangingPassword', async (req, res) => {
     const user = await User.findOne({ email })
     if (user) {
       const OTP_CODE = getRandomCode()
-      await User_Verify.updateMany(
-        { email, isUsed: false },
-        { $set: { isUsed: true } }
-      )
-      const newVerify = new User_Verify()
-      newVerify.email = email
-      newVerify.verifiedCode = OTP_CODE
-      await newVerify.save()
       const transporter = nodemailer.createTransport({
         // config mail server
         service: 'Gmail',
@@ -104,16 +102,13 @@ router.get('/getOTPChangingPassword', async (req, res) => {
         text: 'You recieved message from ' + req.body.email,
         html: `
             <h3>Xin chào <b> ${user.name}</b>, </h3>
-            <p>Ngân hàng chúng tôi vừa nhận được yêu cầu đổi mật khẩu từ bạn vào lúc ${new Date().toLocaleTimeString()} cùng ngày. Nếu bạn không thực hiện, vui lòng bỏ qua E-mail này!</p>
+            <p>Ngân hàng chúng tôi vừa nhận được yêu cầu đổi mật khẩu từ bạn vào lúc ${dateString}. Nếu bạn không thực hiện, vui lòng bỏ qua E-mail này!</p>
             <p>Mã OTP của bạn là: <h3>${OTP_CODE}</h3></p>
             <p>Bạn không nên chia sẻ mã này cho bất kì ai, kể cả nhân viên của ngân hàng chúng tôi.</p>
             <h5>Trân trọng cảm ơn!<h5>
             <h5>Hệ thống ngân hàng điện tử SACOMBANK<h5>
           `
       }
-      setTimeout(() => {
-        console.log('sending...!')
-      }, 2000)
       transporter.sendMail(mainOptions, function (err, info) {
         if (err) {
           return res.status(500).json({
@@ -121,12 +116,23 @@ router.get('/getOTPChangingPassword', async (req, res) => {
             message: err.toString()
           })
         } else {
+          User_Verify.updateMany(
+            { email, isUsed: false },
+            { $set: { isUsed: true } }
+          )
+          const newVerify = new User_Verify()
+          newVerify.email = email
+          newVerify.verifiedCode = OTP_CODE
+          newVerify.save()
           return res.json({
             success: true,
             message: info.response
           })
         }
       })
+      setTimeout(() => {
+        console.log('sending...!')
+      }, 2000)
     } else {
       return res.json({
         success: false,
