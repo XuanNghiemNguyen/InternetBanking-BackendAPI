@@ -6,7 +6,7 @@ const { getRandomCode } = require('../common/index')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const nodemailer = require('nodemailer')
-const moment = require('moment')
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
