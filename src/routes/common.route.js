@@ -68,7 +68,7 @@ router.post('/login', async (req, res) => {
   }
 })
 
-router.get('/getOTPChangingPassword', async (req, res) => {
+router.get('/getOTP', async (req, res) => {
   const now = new Date().toLocaleString('en-US', {
     timeZone: 'Asia/Ho_Chi_Minh'
   })
@@ -98,11 +98,11 @@ router.get('/getOTPChangingPassword', async (req, res) => {
         // thiết lập đối tượng, nội dung gửi mail
         from: 'Hệ thống ngân hàng điện tử SACOMBANK',
         to: email,
-        subject: '[SACOMBANK INTERNET BANKING] Yêu cầu đổi mật khẩu',
+        subject: '[SACOMBANK INTERNET BANKING] Yêu cầu xác thực OTP',
         text: 'You recieved message from ' + req.body.email,
         html: `
             <h3>Xin chào <b> ${user.name}</b>, </h3>
-            <p>Ngân hàng chúng tôi vừa nhận được yêu cầu đổi mật khẩu từ bạn vào lúc ${dateString}. Nếu bạn không thực hiện, vui lòng bỏ qua E-mail này!</p>
+            <p>Ngân hàng chúng tôi vừa nhận được yêu cung cấp mã OTP từ bạn vào lúc ${dateString}. Nếu bạn không thực hiện, vui lòng bỏ qua E-mail này!</p>
             <p>Mã OTP của bạn là: <h3>${OTP_CODE}</h3></p>
             <p>Bạn không nên chia sẻ mã này cho bất kì ai, kể cả nhân viên của ngân hàng chúng tôi.</p>
             <h5>Trân trọng cảm ơn!<h5>
