@@ -2,8 +2,7 @@ const { Schema, model } = require('mongoose')
 
 const AccountSchema = new Schema(
   {
-    number: { type: Number, required: true, unique: true },
-    pin: Number,
+    number: { type: Number, unique : true, required : true, dropDups: true },
     balance: Number,
     isPayment: {
       type: Boolean,
