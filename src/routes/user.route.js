@@ -26,43 +26,6 @@ router.get('/getListAccount', async (req, res) => {
     })
   }
 })
-router.post('/forgotPassword', async (req, res) => {
-  try {
-    const { userId } = req.tokenPayload
-    const { password_1, password_2 } = req.body
-    if (!password_1 || !password_2) {
-      return res.status(400).json({
-        success: false,
-        message: 'password_1 and password_2 are required!'
-      })
-    }
-    if (password_1 !== password_2) {
-      return res.status(400).json({
-        success: false,
-        message: 'password_1 and password_2 are not the same!'
-      })
-    }
-    const user = await User.findById(userId)
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: 'user not found!'
-      })
-    }
-    user.password = await bcrypt.hash(password_1, 10)
-    await user.save()
-    return res.json({
-      success: true,
-      message: 'change password successfully!'
-    })
-  } catch (err) {
-    console.log(err)
-    return res.status(500).json({
-      success: false,
-      message: err.toString()
-    })
-  }
-})
 
 router.post('/changePassword', async (req, res) => {
   try {
