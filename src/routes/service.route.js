@@ -34,6 +34,7 @@ router.post('/info', async (req, res) => {
     }
     const { publicKey_Partner } = req.ventureInfo
     const messageResponse = publicKey_Partner.encrypt(response, 'base64')
+    // return response.success ? res.json({ messageResponse }) : res.status(400).json({ messageResponse })
     return res.json({ messageResponse })
   } catch (error) {
     return res.status(500).json({
@@ -100,6 +101,10 @@ router.post('/transfer', async (req, res) => {
         //return results
         const messageResponse = publicKey_Partner.encrypt(response, 'base64')
         const signatureResponse = privateKey_Sacombank.sign(response, 'base64')
+        // return response.success
+        //   ? res.json({ messageResponse, signatureResponse })
+        //   : res.status(400).json({ messageResponse, signatureResponse })
+
         return res.json({
           messageResponse,
           signatureResponse

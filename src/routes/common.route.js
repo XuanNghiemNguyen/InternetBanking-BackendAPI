@@ -12,7 +12,7 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
     if (!email || !password) {
-      return res.json({
+      return res.status(400).json({
         success: false,
         message: 'Email and password are required!'
       })
@@ -48,7 +48,7 @@ router.post('/login', async (req, res) => {
               user
             })
           } else {
-            return res.json({
+            return res.status(403).json({
               success: false,
               message: 'Password is incorrect!'
             })
@@ -73,7 +73,7 @@ router.post('/getOTP', async (req, res) => {
   try {
     const { email } = req.body
     if (!email) {
-      return res.json({
+      return res.status(403).json({
         success: false,
         message: 'Email is required!'
       })
@@ -139,7 +139,7 @@ router.post('/getOTP', async (req, res) => {
         }
       })
     } else {
-      return res.json({
+      return res.status(400).json({
         success: false,
         message: 'user not found!'
       })
