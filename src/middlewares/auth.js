@@ -29,11 +29,11 @@ const isTrustlyOTP = async (req, res, next) => {
     }
     let user = await User.findOne({ email })
     if (!user) {
-      throw createError('user not found!')
+      return next(createError('user not found!'))
     }
     let user_Verify = await User_Verify.findOne({ email, isUsed: false })
     if (!user_Verify || !user_Verify.jwtCode) {
-      throw createError('There are no code sent!')
+      return next(createError('There are no code sent!'))
     }
     jwt.verify(user_Verify.jwtCode, code.toString(), async (err, payload) => {
       if (err) {

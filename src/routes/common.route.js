@@ -138,9 +138,6 @@ router.post('/getOTP', async (req, res) => {
           })
         }
       })
-      setTimeout(() => {
-        console.log('sending...!')
-      }, 3000)
     } else {
       return res.json({
         success: false,
