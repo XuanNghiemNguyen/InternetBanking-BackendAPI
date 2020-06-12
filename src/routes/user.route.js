@@ -26,6 +26,55 @@ router.get('/getListAccount', async (req, res) => {
     })
   }
 })
+router.get('/getOtherUser', async (req, res) => {
+  try {
+    const { email } = req.query
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required!'
+      })
+    }
+    const accountsArray = await User.find({ isEnabled: true })
+    const accounts = accountsArray.filter(function (item) {
+      return (item.email !== email)
+    })
+    return res.json({
+      success: true,
+      results: accounts
+    })
+  } catch (err) {
+    console.log(err)
+    return res.status(500).json({
+      success: false,
+      message: err.toString()
+    })
+  }
+})
+router.get('/getUserByEmail', async (req, res) => {
+  try {
+    const { email } = req.query
+    console.log(email)
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required!'
+      })
+    }
+    const user = await User.find({email: email, isEnabled: true })
+    console.log(user)
+    return res.json({
+      success: true,
+      results: user
+    })
+  } catch (err) {
+    console.log(err)
+    return res.status(500).json({
+      success: false,
+      message: err.toString()
+    })
+  }
+})
 router.post('/forgotPassword', async (req, res) => {
   try {
     const { userId } = req.tokenPayload
