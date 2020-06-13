@@ -154,27 +154,21 @@ router.post('/getOTP', async (req, res) => {
 
 router.post('/forgotPassword', isTrustlyOTP, async (req, res) => {
   try {
-    const { password_1, password_2 } = req.body
+    const { new_password } = req.body
     const { user, user_Verify } = req.payload
-    if (!password_1 || !password_2) {
+    if (!new_password) {
       return res.status(400).json({
         success: false,
-        message: 'password_1 and password_2 are required!'
+        message: 'new_password is required!'
       })
     }
-    if (password_1 !== password_2) {
-      return res.status(400).json({
-        success: false,
-        message: 'password_1 and password_2 are not the same!'
-      })
-    }
-    user.password = await bcrypt.hash(password_1, 10)
+    user.password = await bcrypt.hash(new_password, 10)
     await user.save()
     user_Verify.isUsed = true
     await user_Verify.save()
     return res.json({
       success: true,
-      message: 'change password successfully!'
+      message: 'Change password successfully!'
     })
   } catch (err) {
     return res.status(500).json({

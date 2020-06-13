@@ -30,17 +30,11 @@ router.get('/getListAccount', async (req, res) => {
 router.post('/changePassword', async (req, res) => {
   try {
     const { userId } = req.tokenPayload
-    const { password_0, password_1, password_2 } = req.body
-    if (!password_0 || !password_1 || !password_2) {
+    const { old_password, new_password } = req.body
+    if (!old_password || !new_password) {
       return res.status(400).json({
         success: false,
-        message: 'password_0, password_1 and password_2 are required!'
-      })
-    }
-    if (password_1 !== password_2) {
-      return res.status(400).json({
-        success: false,
-        message: 'password_1 and password_2 are not the same!'
+        message: 'password_1 and password_2 are required!'
       })
     }
     const user = await User.findById(userId)
@@ -50,9 +44,9 @@ router.post('/changePassword', async (req, res) => {
         message: 'user not found!'
       })
     }
-    const passwordMatching = await bcrypt.compare(password_0, user.password)
+    const passwordMatching = await bcrypt.compare(old_password, user.password)
     if (passwordMatching) {
-      user.password = await bcrypt.hash(password_1, 10)
+      user.password = await bcrypt.hash(new_password, 10)
       await user.save()
       return res.json({
         success: true,
@@ -61,7 +55,7 @@ router.post('/changePassword', async (req, res) => {
     } else {
       return res.status(400).json({
         success: false,
-        message: 'password is incorrect!'
+        message: 'Mật khẩu cũ không đúng!'
       })
     }
   } catch (err) {

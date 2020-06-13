@@ -34,7 +34,6 @@ app.use('/users',   isAuthenticated, require('./src/routes/user.route'))
 
 //handle error
 app.use(function (err, req, res, next) {
-  console.log(JSON.stringify(err))
   return res.status(400).json({
     success: false,
     message: err.message || err
