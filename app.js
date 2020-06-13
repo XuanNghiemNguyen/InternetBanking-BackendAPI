@@ -29,7 +29,7 @@ app.use('/config', require('./src/routes/config.route'))
 
 app.use('/services/accounts', isPartner, require('./src/routes/service.route'))
 app.use('/', require('./src/routes/common.route'))
-app.use('/users',   isAuthenticated, require('./src/routes/user.route'))
+app.use('/users', isAuthenticated, require('./src/routes/user.route'))
 
 
 //handle error

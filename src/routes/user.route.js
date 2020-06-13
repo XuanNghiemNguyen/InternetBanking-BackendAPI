@@ -66,6 +66,145 @@ router.post('/changePassword', async (req, res) => {
     })
   }
 })
+
+router.post('/receivers/delete', async (req, res) => {
+  try {
+    const { userId } = req.tokenPayload
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'user not found!'
+      })
+    }
+    const { number } = req.body
+    if (!number) {
+      return res.status(400).json({
+        success: false,
+        message: 'number is required!'
+      })
+    }
+    if (user.receivers && user.receivers.length > 0) {
+      const index = user.receivers.findIndex((item) => item.number === number)
+      if (index) {
+        user.receivers[index].isEnabled = false
+        await user.save()
+        return res.json({
+          success: true,
+          message: 'OK!'
+        })
+      }
+    }
+    return res.status(400).json({
+      success: false,
+      message: 'receiver is not existed!'
+    })
+  } catch (error) {
+    console.log(err)
+    return res.status(500).json({
+      success: false,
+      message: err.toString()
+    })
+  }
+})
+
+router.post('/receivers/update', async (req, res) => {
+  try {
+    const { userId } = req.tokenPayload
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'user not found!'
+      })
+    }
+    let { number, reminiscent_name, isInterbank } = req.body
+
+    if (!number || typeof isInterbank === 'undefined') {
+      return res.status(400).json({
+        success: false,
+        message: 'number and isInterBank are required!'
+      })
+    }
+
+    if (!isInterbank) {
+      const account = await Account.findOne({ number })
+      if (!account) {
+        return res.status(400).json({
+          success: false,
+          message: 'Số tài khoản không tồn tại!'
+        })
+      }
+      const receiver = await User.findOne({ email: account.owner })
+      if (!receiver) {
+        return res.status(400).json({
+          success: false,
+          message: 'Người dùng không tồn tại!'
+        })
+      }
+      if (!reminiscent_name) {
+        reminiscent_name = receiver.name
+      }
+    }
+    if (user.receivers && user.receivers.length > 0) {
+      const index = user.receivers.findIndex((item) => item.number === number)
+      if (index) {
+        user.receivers.splice(index, 1)
+      }
+    }
+    user.receivers = [
+      ...user.receivers,
+      {
+        number,
+        reminiscent_name,
+        isInterbank,
+        isEnabled: true,
+        updatedAt: Date.now()
+      }
+    ]
+    await user.save()
+    return res.json({
+      success: true,
+      receivers: user.receivers
+    })
+  } catch (err) {
+    console.log(err)
+    return res.status(500).json({
+      success: false,
+      message: err.toString()
+    })
+  }
+})
+
+router.get('/receivers', async (req, res) => {
+  try {
+    const { userId } = req.tokenPayload
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'user not found!'
+      })
+    }
+    const { receivers } = user
+    if (!receivers) {
+      return res.status(400).json({
+        success: false,
+        message: 'receivers is not existed!'
+      })
+    }
+    return res.json({
+      success: true,
+      receivers
+    })
+  } catch (err) {
+    console.log(err)
+    return res.status(500).json({
+      success: false,
+      message: err.toString()
+    })
+  }
+})
 // router.get('/info', async (req, res) => {
 //   try {
 //     const token = req.headers['access-token']

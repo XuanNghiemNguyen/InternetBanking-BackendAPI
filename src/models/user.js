@@ -5,13 +5,14 @@ const UserSchema = new Schema(
   {
     type: { type: String, default: 'normal' },
     name: { type: String, required: true },
-    email: { type: String, unique : true, required : true, dropDups: true },
+    email: { type: String, unique: true, required: true, dropDups: true },
     password: { type: String, required: true },
     pin: { type: String, required: true },
     phone: String,
     payment: Number, //just one payment account
     savings: [Number],
     address: String,
+    receivers: { type: [], default: [] },
     avatar: String,
     refreshToken: {
       type: String,
