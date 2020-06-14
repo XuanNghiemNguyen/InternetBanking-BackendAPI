@@ -3,28 +3,11 @@ const router = express.Router()
 const User = require('../models/user')
 const Account = require('../models/account')
 
-const paymentAccount = {
-  number: 206244699,
-  balance: 500000
-}
-const savingAccounts = [
-  {
-    number: 216244691,
-    balance: 100000
-  },
-  {
-    number: 226244692,
-    balance: 200000
-  },
-  {
-    number: 231624469,
-    balance: 200000
-  },
-  {
-    number: 246244694,
-    balance: 400000
-  }
-]
+const randAccount = (email) => ({
+  number: Math.floor(Math.random() * 1000000000) + 1000000000,
+  balance: Math.floor(Math.random() * 1000) * 10000,
+  owner: email
+})
 
 const userData = [
   {
@@ -90,31 +73,28 @@ const userData = [
     name: 'Nguyễn Văn E',
     password: '$2a$10$Sd8St7kVtmCM4RO397i5c.PdcBjlJnYWixPOkKb2BwmC5lCVi3KZm',
     pin: '$2a$10$0dXGGKrJvA.WgmZanXzOxu8GCobJ6PYUeYhHN6neTEjrV7Oh.e5wm'
-  },
+  }
 ]
 
 router.post('/insertData', async (req, res) => {
   try {
     await Promise.all([
       userData.forEach(async (user, index) => {
+        const paymentAcc = randAccount(user.email)
+        const savingsAcc = Array(5).fill(2).map(k => randAccount(user.email))
         let newUser = new User({
           ...user,
-          payment: paymentAccount.number + index || 0,
-          savings: savingAccounts.map((i) => i.number + index) || []
+          isVerified: true,
+          payment: paymentAcc.number,
+          savings: savingsAcc.map(i => i.number)
         })
         await newUser.save()
-        paymentAccount.number += 1
-        let newPayment = new Account({
-          ...paymentAccount,
-          owner: user.email
-        })
+        const newPayment = new Account(paymentAcc)
         await newPayment.save()
         await Promise.all([
-          savingAccounts.forEach(async (item) => {
-            item.number += 1
+          savingsAcc.forEach(async (item) => {
             let newSaving = new Account({
               ...item,
-              owner: user.email,
               isPayment: false
             })
             await newSaving.save()
@@ -124,7 +104,7 @@ router.post('/insertData', async (req, res) => {
     ])
     setTimeout(() => {
       console.log('writing...!')
-    }, 3000);
+    }, 3000)
     return res.json({
       success: true,
       message: 'OK'
