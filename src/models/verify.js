@@ -2,10 +2,14 @@ const { Schema, model } = require('mongoose')
 
 const User_Verify = new Schema(
   {
-    email: String,
-    verifiedCode: String,
+    email: {
+      type: String,
+      required: true,
+      unique: true
+    },
+    jwtCode: String,
     isUsed: { type: Boolean, default: false },
-    createdAt: { type: Number, default: +new Date() }
+    updatedAt: { type: Number, default: +new Date() }
   },
   {
     versionKey: false // remove field "__v"

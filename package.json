@@ -25,11 +25,13 @@
     "morgan": "~1.9.1",
     "node-rsa": "^1.0.8",
     "nodemailer": "^6.4.8",
-    "nodemon": "^2.0.2",
     "openpgp": "^4.10.4",
     "rand-token": "^1.0.1",
     "uuidv4": "^6.0.6"
   },
   "author": "XuanNghiemNguyen",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  }
 }

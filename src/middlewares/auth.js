@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
 const createError = require('http-errors')
 const User = require('../models/user')
+const User_Verify = require('../models/verify')
 
 const isAuthenticated = (req, res, next) => {
   const token = req.headers['access-token']
@@ -20,6 +21,40 @@ const isAuthenticated = (req, res, next) => {
   }
 }
 
+const isTrustlyOTP = async (req, res, next) => {
+  const { email, code } = req.body
+  if (!email || !code) {
+    return next(createError('email, code are required!'))
+  }
+  let user = await User.findOne({ email })
+  if (!user) {
+    return next(createError('Không tìm thấy người dùng với email này!'))
+  }
+  let user_Verify = await User_Verify.findOne({ email, isUsed: false })
+  if (!user_Verify || !user_Verify.jwtCode) {
+    return next(createError('Bạn chưa lấy mã!'))
+  }
+  jwt.verify(user_Verify.jwtCode, code.toString(), async (err, payload) => {
+    if (err) {
+      switch (err.message) {
+        case 'jwt expired':
+          return next(createError(`Mã OTP hết hạn sử dụng!`))
+        case 'invalid signature':
+          return next(createError(`Mã OTP không chính xác!`))
+      }
+    }
+    if (!payload || !payload.email || payload.email !== email) {
+      return next(createError(`Mã OTP hoặc email không khớp`))
+    }
+    req.payload = {
+      user,
+      user_Verify
+    }
+    next()
+  })
+}
+
 module.exports = {
-  isAuthenticated
+  isAuthenticated,
+  isTrustlyOTP
 }
