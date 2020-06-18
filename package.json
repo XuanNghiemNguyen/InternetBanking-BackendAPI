@@ -20,6 +20,7 @@
     "http-errors": "^1.7.3",
     "jsonwebtoken": "^8.5.1",
     "md5": "^2.2.1",
+    "moment": "^2.26.0",
     "mongodb": "^3.5.4",
     "mongoose": "^5.9.3",
     "morgan": "~1.9.1",
