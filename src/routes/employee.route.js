@@ -26,7 +26,7 @@ router.get('/deposit',async(req,res)=>{
     }
    
 })
-router.get('/createUser',async(req,res)=>{
+router.post('/createUser',async(req,res)=>{
     
     var {email,phone,name,password,pin}=req.body;
     password=md5(password);
