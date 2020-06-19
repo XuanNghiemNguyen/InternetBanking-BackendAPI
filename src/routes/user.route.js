@@ -190,6 +190,21 @@ router.post('/sendDebt', async (req, res) => {
     })
   }
 })
+router.get('/getDebt', async (req, res) => {
+	try {
+	  const debt = await Debt.find()
+	  return res.json({
+		success: true,
+		debt: debt
+	  })
+	} catch (err) {
+	  console.log(err)
+	  return res.status(500).json({
+		success: false,
+		message: err.toString()
+	  })
+	}
+  })
 router.get('/receivers', async (req, res) => {
 	try {
 		const { userId } = req.tokenPayload
