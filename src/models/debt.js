@@ -6,7 +6,8 @@ const DebtSchema = new Schema(
     toAccount: { type: String },
     amount: {type: Number},
     msg: String,
-    state : {type: Boolean, default: false}
+    state : {type: Boolean, default: false},
+    isEnabled : {type: Boolean, default: true}
   },
   {
     versionKey: false // remove field "__v"

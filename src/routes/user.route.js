@@ -70,27 +70,26 @@ router.get('/getListAccount', async (req, res) => {
 //   }
 // })
 router.get('/getUserByEmail', async (req, res) => {
-  try {
-    const { email } = req.query
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email is required!'
-      })
-    }
-    const user = await User.find({ email: email, isEnabled: true })
-    console.log(user)
-    return res.json({
-      success: true,
-      results: user
-    })
-  } catch (err) {
-    console.log(err)
-    return res.status(500).json({
-      success: false,
-      message: err.toString()
-    })
-  }
+	try {
+		const { email } = req.query
+		if (!email) {
+			return res.status(400).json({
+				success: false,
+				message: 'Email is required!'
+			})
+		}
+		const user = await User.find({ email: email, isEnabled: true })
+		return res.json({
+			success: true,
+			results: user
+		})
+	} catch (err) {
+		console.log(err)
+		return res.status(500).json({
+			success: false,
+			message: err.toString()
+		})
+	}
 })
 router.post('/forgotPassword', async (req, res) => {
 })
@@ -168,43 +167,103 @@ router.post('/receivers/update', async (req, res) => {
 })
 
 router.post('/sendDebt', async (req, res) => {
-  try {
-    const { info } = req.body
+	try {
+		const { info } = req.body
 
-    if (!info) {
-      return res.status(400).json({
-        success: false,
-        message: 'info is required!'
-      })
-    }
-    const debt = await Debt.insertMany(info)
-    return res.json({
-      success: true,
-      debt: debt
-    })
-  } catch (err) {
-    console.log(err)
-    return res.status(500).json({
-      success: false,
-      message: err.toString()
-    })
-  }
+		if (!info) {
+			return res.status(400).json({
+				success: false,
+				message: 'info is required!'
+			})
+		}
+		const debt = await Debt.insertMany(info)
+		return res.json({
+			success: true,
+			debt: debt
+		})
+	} catch (err) {
+		console.log(err)
+		return res.status(500).json({
+			success: false,
+			message: err.toString()
+		})
+	}
+})
+router.post('/cancelDebt', async (req, res) => {
+	try {
+		const { info } = req.body
+
+		if (!info) {
+			return res.status(400).json({
+				success: false,
+				message: 'info is required!'
+			})
+		}
+		
+		const debt = await Debt.findOne(info)
+		
+		debt.isEnabled = false
+		debt.save()
+		return res.json({
+			success: true,
+			debt: debt
+		})
+	} catch (err) {
+		console.log(err)
+		return res.status(500).json({
+			success: false,
+			message: err.toString()
+		})
+	}
+})
+router.post('/payDebt', async (req, res) => {
+	try {
+		const { info } = req.body
+		if (!info) {
+			return res.status(400).json({
+				success: false,
+				message: 'info is required!'
+			})
+		}
+		const fromAccount = await Account.findOne({number: parseInt(info.fromAccount)})
+		fromAccount.balance = fromAccount.balance - parseInt(info.amount)
+		fromAccount.save()
+		
+		const toAccount = await Account.findOne({number: parseInt(info.toAccount)})
+		toAccount.balance = toAccount.balance + parseInt(info.amount)
+		toAccount.save()
+
+		const debt = await Debt.findOne(info)
+		debt.state = true
+		debt.save()
+
+		return res.json({
+			success: true,
+		})
+	} catch (err) {
+		console.log(err)
+		return res.status(500).json({
+			success: false,
+			message: err.toString()
+		})
+	}
 })
 router.get('/getDebt', async (req, res) => {
 	try {
-	  const debt = await Debt.find()
-	  return res.json({
-		success: true,
-		debt: debt
-	  })
+		const d = await Debt.find()
+		const debt = d.filter(item => (item.isEnabled === true && item.state === false))
+		return res.json({
+			success: true,
+			debt: debt
+		})
 	} catch (err) {
-	  console.log(err)
-	  return res.status(500).json({
-		success: false,
-		message: err.toString()
-	  })
+		console.log(err)
+		return res.status(500).json({
+			success: false,
+			message: err.toString()
+		})
 	}
-  })
+})
 router.get('/receivers', async (req, res) => {
 	try {
 		const { userId } = req.tokenPayload
@@ -279,7 +338,7 @@ router.get('/hhbank/getInfo', async (req, res) => {
 				message: 'number is required!'
 			})
 		}
-    const data = await HHBANK_API.getUserInfo(number)
+		const data = await HHBANK_API.getUserInfo(number)
 		if (data && data.success) {
 			return res.json({
 				success: true,
@@ -288,11 +347,11 @@ router.get('/hhbank/getInfo', async (req, res) => {
 				}
 			})
 		} else {
-      return res.status(400).json({
+			return res.status(400).json({
 				success: false,
 				message: 'user not found'
 			})
-    }
+		}
 	} catch (err) {
 		console.log(err)
 		return res.status(500).json({
@@ -312,7 +371,7 @@ router.get('/team29/getInfo', async (req, res) => {
 				message: 'number is required!'
 			})
 		}
-    const data = await TEAM29_API.getUserInfo(number)
+		const data = await TEAM29_API.getUserInfo(number)
 		if (data && data.message === 'OK' && data.payload) {
 			return res.json({
 				success: true,
@@ -321,11 +380,11 @@ router.get('/team29/getInfo', async (req, res) => {
 				}
 			})
 		} else {
-      return res.status(400).json({
+			return res.status(400).json({
 				success: false,
 				message: 'user not found'
 			})
-    }
+		}
 	} catch (err) {
 		console.log(err)
 		return res.status(500).json({
