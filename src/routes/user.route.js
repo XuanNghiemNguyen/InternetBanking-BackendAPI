@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const User = require('../models/user')
 const Account = require('../models/account')
+const Transaction = require('../models/transaction')
 const Debt = require('../models/debt')
 const bcrypt = require('bcryptjs')
 const HHBANK_API = require('../services/hhbank')
@@ -91,8 +92,7 @@ router.get('/getUserByEmail', async (req, res) => {
 		})
 	}
 })
-router.post('/forgotPassword', async (req, res) => {
-})
+
 router.post('/changePassword', async (req, res) => {
 	try {
 		const { userId } = req.tokenPayload
@@ -199,9 +199,9 @@ router.post('/cancelDebt', async (req, res) => {
 				message: 'info is required!'
 			})
 		}
-		
+
 		const debt = await Debt.findOne(info)
-		
+
 		debt.isEnabled = false
 		debt.save()
 		return res.json({
@@ -225,11 +225,15 @@ router.post('/payDebt', async (req, res) => {
 				message: 'info is required!'
 			})
 		}
-		const fromAccount = await Account.findOne({number: parseInt(info.fromAccount)})
+		const fromAccount = await Account.findOne({
+			number: parseInt(info.fromAccount)
+		})
 		fromAccount.balance = fromAccount.balance - parseInt(info.amount)
 		fromAccount.save()
-		
-		const toAccount = await Account.findOne({number: parseInt(info.toAccount)})
+
+		const toAccount = await Account.findOne({
+			number: parseInt(info.toAccount)
+		})
 		toAccount.balance = toAccount.balance + parseInt(info.amount)
 		toAccount.save()
 
@@ -238,7 +242,7 @@ router.post('/payDebt', async (req, res) => {
 		debt.save()
 
 		return res.json({
-			success: true,
+			success: true
 		})
 	} catch (err) {
 		console.log(err)
@@ -251,7 +255,9 @@ router.post('/payDebt', async (req, res) => {
 router.get('/getDebt', async (req, res) => {
 	try {
 		const d = await Debt.find()
-		const debt = d.filter(item => (item.isEnabled === true && item.state === false))
+		const debt = d.filter(
+			(item) => item.isEnabled === true && item.state === false
+		)
 		return res.json({
 			success: true,
 			debt: debt
@@ -324,6 +330,124 @@ router.get('/getOtherInfo', async (req, res) => {
 		return res.status(500).json({
 			success: false,
 			message: err.toString()
+		})
+	}
+})
+
+router.get('/accountsByUser', async (req, res) => {
+	try {
+		const { email } = req.query
+		if (!email) {
+			return res.status(400).json({
+				success: false,
+				message: 'Email is required!'
+			})
+		}
+		const accounts = await Account.find({ owner: email })
+		if (!accounts || accounts.length < 1) {
+			return res.status(400).json({
+				success: false,
+				message: 'user does not own any email!'
+			})
+		}
+		return res.json({
+			success: true,
+			accounts
+		})
+	} catch (error) {
+		console.log(err)
+		return res.status(500).json({
+			success: false,
+			message: err.toString()
+		})
+	}
+})
+
+router.post('/transfer', async (req, res) => {
+	try {
+		let {
+			numberResource,
+			numberReceiver,
+			amount,
+			message,
+			isSenderPaidFee
+		} = req.body
+		if (!numberResource || !numberReceiver || !amount) {
+			return res.status(400).json({
+				success: false,
+				message: 'Required Fields: numberResource, numberReceiver, amount!'
+			})
+		}
+		if (amount % 10000 !== 0) {
+			return res.status(400).json({
+				success: false,
+				status_code: 1001,
+				message: 'Amount must be a multiple of 10000!'
+			})
+		}
+		
+		const sender = await Account.findOne({ number: numberResource })
+		const receiver = await Account.findOne({ number: numberReceiver })
+		if (!sender) {
+			return res.status(400).json({
+				success: false,
+				status_code: 1001,
+				message: 'sender is not found!'
+			})
+		}
+		if (!receiver) {
+			return res.status(400).json({
+				success: false,
+				status_code: 1002,
+				message: 'receiver is not found!'
+			})
+		}
+		if (isSenderPaidFee) {
+			if (sender.balance - amount * 1.01 < 50000) {
+				return res.status(400).json({
+					success: false,
+					status_code: 1003,
+					message: 'balance is not enough!'
+				})
+			}
+			sender.balance -= parseInt(amount * 1.01)
+			receiver.balance += parseInt(amount)
+			await sender.save()
+			await receiver.save()
+		} else {
+			if (sender.balance - amount < 50000) {
+				return res.status(400).json({
+					success: false,
+					status_code: 1003,
+					message: 'balance is not enough!'
+				})
+			}
+			sender.balance -= parseInt(amount)
+			receiver.balance += parseInt(amount * 0.99)
+			await sender.save()
+			await receiver.save()
+		}
+		let report = new Transaction()
+		report.sender = {
+			email: sender.owner,
+			number: numberResource
+		}
+		report.receiver = {
+			email: receiver.owner,
+			number: numberReceiver
+		}
+		report.message = message
+		report.isSenderPaidFee = !!isSenderPaidFee
+		await report.save()
+		return res.json({
+			success: true,
+			message: 'Transfer successfully!'
+		})
+	} catch (error) {
+		console.log(error)
+		return res.status(500).json({
+			success: false,
+			message: error.toString()
 		})
 	}
 })

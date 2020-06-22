@@ -3,7 +3,7 @@ const { Schema, model } = require('mongoose')
 const AccountSchema = new Schema(
   {
     number: { type: Number, unique : true, required : true, dropDups: true },
-    balance: Number,
+    balance: {type: Number, default: 50000},
     isPayment: {
       type: Boolean,
       default: true
