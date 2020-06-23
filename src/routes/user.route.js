@@ -7,6 +7,7 @@ const Debt = require('../models/debt')
 const bcrypt = require('bcryptjs')
 const HHBANK_API = require('../services/hhbank')
 const TEAM29_API = require('../services/team29')
+const { isTrustlyOTP } = require('../middlewares/auth')
 
 router.get('/getListAccount', async (req, res) => {
 	try {
@@ -204,9 +205,13 @@ router.post('/cancelDebt', async (req, res) => {
 
 		debt.isEnabled = false
 		debt.save()
+		const d = await Debt.find()
+		const newDebts = d.filter(
+			(item) => item.isEnabled === true && item.state === false
+		)
 		return res.json({
 			success: true,
-			debt: debt
+			debt: newDebts
 		})
 	} catch (err) {
 		console.log(err)
@@ -219,6 +224,7 @@ router.post('/cancelDebt', async (req, res) => {
 router.post('/payDebt', async (req, res) => {
 	try {
 		const { info } = req.body
+		console.log(info)
 		if (!info) {
 			return res.status(400).json({
 				success: false,
@@ -228,16 +234,17 @@ router.post('/payDebt', async (req, res) => {
 		const fromAccount = await Account.findOne({
 			number: parseInt(info.fromAccount)
 		})
-		fromAccount.balance = fromAccount.balance - parseInt(info.amount)
+		fromAccount.balance = fromAccount.balance + parseInt(info.amount) 
 		fromAccount.save()
 
 		const toAccount = await Account.findOne({
 			number: parseInt(info.toAccount)
 		})
-		toAccount.balance = toAccount.balance + parseInt(info.amount)
+		toAccount.balance = toAccount.balance - parseInt(info.amount) - parseInt(info.fee)
 		toAccount.save()
 
 		const debt = await Debt.findOne(info)
+		console.log(debt)
 		debt.state = true
 		debt.save()
 
@@ -363,7 +370,7 @@ router.get('/accountsByUser', async (req, res) => {
 	}
 })
 
-router.post('/transfer', async (req, res) => {
+router.post('/transfer',isTrustlyOTP, async (req, res) => {
 	try {
 		let {
 			numberResource,

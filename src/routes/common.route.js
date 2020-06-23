@@ -151,7 +151,22 @@ router.post('/getOTP', async (req, res) => {
     })
   }
 })
-
+router.post('/verifyOTP', isTrustlyOTP, async (req, res) => {
+  try {
+    const { user_Verify } = req.payload
+    user_Verify.isUsed = true
+    await user_Verify.save()
+    return res.json({
+      success: true,
+      message: 'Verify OTP successfully!'
+    })
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: err.toString()
+    })
+  }
+})
 router.post('/forgotPassword', isTrustlyOTP, async (req, res) => {
   try {
     const { new_password } = req.body
