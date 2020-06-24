@@ -8,6 +8,7 @@ const bcrypt = require('bcryptjs')
 const HHBANK_API = require('../services/hhbank')
 const TEAM29_API = require('../services/team29')
 const { isTrustlyOTP } = require('../middlewares/auth')
+const { TooManyRequests } = require('http-errors')
 
 router.get('/getListAccount', async (req, res) => {
 	try {
@@ -193,16 +194,13 @@ router.post('/sendDebt', async (req, res) => {
 router.post('/cancelDebt', async (req, res) => {
 	try {
 		const { info } = req.body
-
 		if (!info) {
 			return res.status(400).json({
 				success: false,
 				message: 'info is required!'
 			})
 		}
-
 		const debt = await Debt.findOne(info)
-
 		debt.isEnabled = false
 		debt.save()
 		const d = await Debt.find()
@@ -234,7 +232,7 @@ router.post('/payDebt', async (req, res) => {
 		const fromAccount = await Account.findOne({
 			number: parseInt(info.fromAccount)
 		})
-		fromAccount.balance = fromAccount.balance + parseInt(info.amount) 
+		fromAccount.balance = fromAccount.balance + parseInt(info.amount)
 		fromAccount.save()
 
 		const toAccount = await Account.findOne({
@@ -262,9 +260,10 @@ router.post('/payDebt', async (req, res) => {
 router.get('/getDebt', async (req, res) => {
 	try {
 		const d = await Debt.find()
-		const debt = d.filter(
-			(item) => item.isEnabled === true && item.state === false
-		)
+		const debt = d
+		// .filter(
+		// 	(item) => item.isEnabled === true && item.state === false
+		// )
 		return res.json({
 			success: true,
 			debt: debt
@@ -370,7 +369,7 @@ router.get('/accountsByUser', async (req, res) => {
 	}
 })
 
-router.post('/transfer',isTrustlyOTP, async (req, res) => {
+router.post('/transfer', isTrustlyOTP, async (req, res) => {
 	try {
 		let {
 			numberResource,
@@ -392,7 +391,7 @@ router.post('/transfer',isTrustlyOTP, async (req, res) => {
 				message: 'Amount must be a multiple of 10000!'
 			})
 		}
-		
+
 		const sender = await Account.findOne({ number: numberResource })
 		const receiver = await Account.findOne({ number: numberReceiver })
 		if (!sender) {
@@ -458,7 +457,28 @@ router.post('/transfer',isTrustlyOTP, async (req, res) => {
 		})
 	}
 })
-
+router.get('/getTransaction', async (req, res) => {
+	try {
+		const transaction = await Transaction.find()
+		if(transaction){
+			return res.json({
+				success: true,
+				transaction: transaction
+			})
+		}else{
+			return res.status(400).json({
+				success: false,
+				message: 'transaction not found'
+			})
+		}
+	} catch (error) {
+		console.log(err)
+		return res.status(500).json({
+			success: false,
+			message: err.toString()
+		})
+	}
+})
 //HHBANK
 router.get('/hhbank/getInfo', async (req, res) => {
 	try {
