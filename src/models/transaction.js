@@ -7,6 +7,7 @@ const Transaction = new Schema(
 		amount: { type: Number },
 		message: { type: String, default: '' },
 		success: { type: Boolean, default: true },
+		isInterbankTrans: { type: Boolean, default: false },
 		isSenderPaidFee: { type: Boolean, default: true }
 	},
 	{

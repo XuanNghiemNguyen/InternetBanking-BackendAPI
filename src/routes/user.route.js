@@ -443,6 +443,7 @@ router.post('/transfer', isTrustlyOTP, async (req, res) => {
 			number: numberReceiver
 		}
 		report.message = message
+		report.amount = amount
 		report.isSenderPaidFee = !!isSenderPaidFee
 		await report.save()
 		return res.json({
