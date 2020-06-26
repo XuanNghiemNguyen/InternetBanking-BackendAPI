@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const User = require('../models/user')
 const Account = require('../models/account')
+const Transaction = require('../models/transaction')
 const randtoken = require('rand-token')
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
@@ -12,10 +13,10 @@ router.post('/deposit',async(req,res)=>{
         var account = await Account.findOne({ number: stk, isEnabled: true })
         if(account ==null){
           var error= "Tài khoản không tồn tại"
-        }
+        } 
         const  updateAccount=await Account.findOneAndUpdate({number:stk},{$set:{balance:account.balance+parseFloat(amount)}})
         } else{
-          var account = await Account.findOne({ owner: stk, isEnabled: true })
+          var account = await Account.findOne({ owner: stk, isPayment: true })
           if(account ==null){
             var error= "Email không tồn tại"
           }
@@ -96,4 +97,50 @@ router.post('/createUser',async(req,res)=>{
    
   res.json({results:"success!"})}
 })
+router.post('/receiveHistory',async(req,res)=>{
+  var stk = req.body;
+
+  const isExit = await Account.findOne({number:stk,isEnabled:true})
+  
+  if(!isExit){
+    res.json({
+      success:false,
+      message:"Tài khoản không tồn tại!"
+    })
+  } else {
+  const results = await Transaction.findOne({receiver:stk})
+  res.json({
+    success:true,
+    result:results
+  })}
+})
+router.post('/sendHistory',async(req,res)=>{
+ 
+  const stk = req.body;
+  if(stk.indexOf('@')==-1){
+    const account = await Account.findOne({ number: stk, isPayment: true })
+    if(account ==null){
+     res.json({
+       success:false,
+       message:"Tài khoảng không tồn tại!"
+     })
+    } }
+    
+     else{
+      const account = await Account.findOne({ owner: stk, isPayment: true })
+      if(account ==null){
+        res.json({
+          success:false,
+          message:"Tài khoản không tồn tại!"
+        })
+      } 
+     
+    } 
+    var senders = await Transaction.findOne({sender:stk})
+    return res.json({
+      success:true,
+      result:senders
+    })
+})
+
 module.exports = router;
