@@ -98,7 +98,8 @@ router.post('/createUser',async(req,res)=>{
   res.json({results:"success!"})}
 })
 router.post('/receiveHistory',async(req,res)=>{
-  var stk = req.body;
+  var {stk} = req.body;
+  
 
   const isExit = await Account.findOne({number:stk,isEnabled:true})
   
@@ -108,7 +109,8 @@ router.post('/receiveHistory',async(req,res)=>{
       message:"Tài khoản không tồn tại!"
     })
   } else {
-  const results = await Transaction.findOne({receiver:stk})
+  const results = await Transaction.find({"receiver.number":stk})
+  console.log(results)
   res.json({
     success:true,
     result:results
@@ -116,27 +118,18 @@ router.post('/receiveHistory',async(req,res)=>{
 })
 router.post('/sendHistory',async(req,res)=>{
  
-  const stk = req.body;
-  if(stk.indexOf('@')==-1){
+  const {stk} = req.body;
+  
     const account = await Account.findOne({ number: stk, isPayment: true })
     if(account ==null){
      res.json({
        success:false,
-       message:"Tài khoảng không tồn tại!"
+       message:"Tài khoản không tồn tại !"
      })
-    } }
+    }
     
-     else{
-      const account = await Account.findOne({ owner: stk, isPayment: true })
-      if(account ==null){
-        res.json({
-          success:false,
-          message:"Tài khoản không tồn tại!"
-        })
-      } 
      
-    } 
-    var senders = await Transaction.findOne({sender:stk})
+    const senders = await Transaction.find({"sender.number":stk})
     return res.json({
       success:true,
       result:senders
