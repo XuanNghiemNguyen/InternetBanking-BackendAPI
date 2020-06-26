@@ -9,15 +9,21 @@ router.post('/deposit',async(req,res)=>{
     try{
         const {stk,amount}=req.body
        if(stk.indexOf('@')==-1){
-        const account = await Account.findOne({ number: stk, isEnabled: true })
-        var  updateAccount=await Account.findOneAndUpdate({number:stk},{$set:{balance:account.balance+parseFloat(amount)}})
+        var account = await Account.findOne({ number: stk, isEnabled: true })
+        if(account ==null){
+          var error= "Tài khoản không tồn tại"
+        }
+        const  updateAccount=await Account.findOneAndUpdate({number:stk},{$set:{balance:account.balance+parseFloat(amount)}})
         } else{
-          const account = await Account.findOne({ owner: stk, isEnabled: true })
-          var  updateAccount=await Account.findOneAndUpdate({number:account.number},{$set:{balance:+account.balance+parseFloat(amount)}})
+          var account = await Account.findOne({ owner: stk, isEnabled: true })
+          if(account ==null){
+            var error= "Email không tồn tại"
+          }
+          const  updateAccount=await Account.findOneAndUpdate({number:account.number},{$set:{balance:+account.balance+parseFloat(amount)}})
         } 
     return res.json({
       success: true,
-      results: updateAccount
+      results: account
       
     })
     }
@@ -25,7 +31,7 @@ router.post('/deposit',async(req,res)=>{
         console.log(err)
         return res.status(500).json({
         success: false,
-        message: err.toString()
+        message: error
     })
     }
    
@@ -33,11 +39,15 @@ router.post('/deposit',async(req,res)=>{
 router.post('/createUser',async(req,res)=>{
     
     var {email,phone,name,password,pin}=req.body
-   
     var number
     var check=true
-   
-    
+    const isAvailable = await User.findOne({email:email})?true : false;
+    if(isAvailable == true){
+      res.json({success:false,
+                message:"Email này đã được sử dụng, vui lòng nhập email khác!"    
+      })
+    }
+    else{
     while(check!==false){
       number= Math.floor(Math.random() * 1000000000) + 1000000000;
       check=await Account.findOne({number:number,isEnabled: true})?true:false;
@@ -84,6 +94,6 @@ router.post('/createUser',async(req,res)=>{
       });
     });
    
-  res.json({results:"success!"})
+  res.json({results:"success!"})}
 })
 module.exports = router;
