@@ -3,6 +3,7 @@ const router = express.Router()
 const User = require('../models/user')
 const Account = require('../models/account')
 const Transaction = require('../models/transaction')
+const Debt = require('../models/debt')
 const randtoken = require('rand-token')
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
@@ -135,5 +136,25 @@ router.post('/sendHistory',async(req,res)=>{
       result:senders
     })
 })
-
+router.post('/debtHistory',async(req,res)=>{
+ 
+  const {stk} = req.body;
+  
+    const account = await Account.findOne({ number: stk, isPayment: true })
+    if(account ==null){
+     res.json({
+       success:false,
+       message:"Tài khoản không tồn tại !"
+     })
+    }
+    
+     
+    const from = await Debt.find({fromAccount:stk,state:true})
+    const to= await Debt.find({toAccount:stk,state:true})
+    return res.json({
+      success:true,
+      from:from,
+      to:to
+    })
+})
 module.exports = router;

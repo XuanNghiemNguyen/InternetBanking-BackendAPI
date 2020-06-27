@@ -50,6 +50,8 @@ const isTrustlyOTP = async (req, res, next) => {
       user,
       user_Verify
     }
+    user_Verify.isUsed = true
+    await user_Verify.save()
     next()
   })
 }
