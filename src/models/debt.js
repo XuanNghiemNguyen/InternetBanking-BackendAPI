@@ -8,7 +8,8 @@ const DebtSchema = new Schema(
     fee: {type: Number},
     msg: String,
     state : {type: Boolean, default: false},
-    isEnabled : {type: Boolean, default: true}
+    isEnabled : {type: Boolean, default: true},
+    paidAt: { type: Number, default: +new Date() }
   },
   {
     versionKey: false // remove field "__v"
