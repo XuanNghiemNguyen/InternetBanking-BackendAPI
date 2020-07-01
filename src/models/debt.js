@@ -4,13 +4,14 @@ const DebtSchema = new Schema(
   {
     fromAccount: { type: String },
     toAccount: { type: String },
-    amount: {type: Number},
+    amount: { type: Number },
     msg: String,
-    state : {type: Boolean, default: false},
-    isEnabled : {type: Boolean, default: true}
+    state: { type: Boolean, default: false },
+    isEnabled: { type: Boolean, default: true },
+    createdAt: { type: Number, default: +new Date() },
   },
   {
-    versionKey: false // remove field "__v"
+    versionKey: false, // remove field "__v"
   }
 )
 

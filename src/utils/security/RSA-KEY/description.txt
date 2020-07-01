@@ -1,0 +1,3 @@
+Cặp khóa RSA trong folder này là cặp khóa RSA chính thức của SAMCOMBANK (Để gọi api của Agribank)
+Private-Key: dùng để kí.
+Public-key: để chia sẽ cho đối tác nhằm xác thực chữ kí của SAMCOMBANK
