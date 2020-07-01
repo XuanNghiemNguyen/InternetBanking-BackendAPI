@@ -8,6 +8,8 @@ const bcrypt = require('bcryptjs')
 const HHBANK_API = require('../services/hhbank')
 const TEAM29_API = require('../services/agribank')
 const { isTrustlyOTP } = require('../middlewares/auth')
+// const { TooManyRequests } = require('http-errors')
+
 router.get('/getListAccount', async (req, res) => {
   try {
     const { email } = req.query
@@ -30,46 +32,7 @@ router.get('/getListAccount', async (req, res) => {
     })
   }
 })
-// router.get('/getAllAccount', async (req, res) => {
-//   try {
-//     const accounts = await Account.find({  isEnabled: true })
-//     return res.json({
-//       success: true,
-//       results: accounts
-//     })
-//   } catch (err) {
-//     console.log(err)
-//     return res.status(500).json({
-//       success: false,
-//       message: err.toString()
-//     })
-//   }
-// })
-// router.get('/getOtherUser', async (req, res) => {
-//   try {
-//     const { email } = req.query
-//     if (!email) {
-//       return res.status(400).json({
-//         success: false,
-//         message: 'Email is required!'
-//       })
-//     }
-//     const accountsArray = await User.find({ isEnabled: true })
-//     const accounts = accountsArray.filter(function (item) {
-//       return (item.email !== email)
-//     })
-//     return res.json({
-//       success: true,
-//       results: accounts
-//     })
-//   } catch (err) {
-//     console.log(err)
-//     return res.status(500).json({
-//       success: false,
-//       message: err.toString()
-//     })
-//   }
-// })
+
 router.get('/getUserByEmail', async (req, res) => {
   try {
     const { email } = req.query
@@ -78,7 +41,8 @@ router.get('/getUserByEmail', async (req, res) => {
         success: false,
         message: 'Email is required!',
       })
-    }
+	}
+	console.log(email)
     const user = await User.find({ email: email, isEnabled: true })
     return res.json({
       success: true,
@@ -233,56 +197,60 @@ router.post('/sendDebt', async (req, res) => {
   }
 })
 router.post('/cancelDebt', async (req, res) => {
-  try {
-    const { info } = req.body
-
-    if (!info) {
-      return res.status(400).json({
-        success: false,
-        message: 'info is required!',
-      })
-    }
-
-    const debt = await Debt.findOne(info)
-
-    debt.isEnabled = false
-    debt.save()
-    return res.json({
-      success: true,
-      debt: debt,
-    })
-  } catch (err) {
-    console.log(err)
-    return res.status(500).json({
-      success: false,
-      message: err.toString(),
-    })
-  }
+	try {
+		const { info } = req.body
+		if (!info) {
+			return res.status(400).json({
+				success: false,
+				message: 'info is required!'
+			})
+		}
+		const debt = await Debt.findOne(info)
+		debt.isEnabled = false
+		debt.save()
+		const d = await Debt.find()
+		const newDebts = d.filter(
+			(item) => item.isEnabled === true && item.state === false
+		)
+		return res.json({
+			success: true,
+			debt: newDebts
+		})
+	} catch (err) {
+		console.log(err)
+		return res.status(500).json({
+			success: false,
+			message: err.toString()
+		})
+	}
 })
 router.post('/payDebt', async (req, res) => {
-  try {
-    const { info } = req.body
-    if (!info) {
-      return res.status(400).json({
-        success: false,
-        message: 'info is required!',
-      })
-    }
-    const fromAccount = await Account.findOne({
-      number: parseInt(info.fromAccount),
-    })
-    fromAccount.balance = fromAccount.balance - parseInt(info.amount)
-    fromAccount.save()
+	try {
+		const { info } = req.body
+		console.log(info)
+		if (!info) {
+			return res.status(400).json({
+				success: false,
+				message: 'info is required!'
+			})
+		}
+		const fromAccount = await Account.findOne({
+			number: parseInt(info.fromAccount)
+		})
+		fromAccount.balance = fromAccount.balance + parseInt(info.amount)
+		fromAccount.save()
 
-    const toAccount = await Account.findOne({
-      number: parseInt(info.toAccount),
-    })
-    toAccount.balance = toAccount.balance + parseInt(info.amount)
-    toAccount.save()
+		const toAccount = await Account.findOne({
+			number: parseInt(info.toAccount)
+		})
+		toAccount.balance = toAccount.balance - parseInt(info.amount) - parseInt(info.fee)
+		toAccount.save()
 
-    const debt = await Debt.findOne(info)
-    debt.state = true
-    debt.save()
+		const debt = await Debt.findOne(info)
+		console.log(debt)
+		debt.state = true
+		debt.paidAt = +new Date()
+		debt.save()
 
     return res.json({
       success: true,
@@ -296,22 +264,23 @@ router.post('/payDebt', async (req, res) => {
   }
 })
 router.get('/getDebt', async (req, res) => {
-  try {
-    const d = await Debt.find()
-    const debt = d.filter(
-      (item) => item.isEnabled === true && item.state === false
-    )
-    return res.json({
-      success: true,
-      debt: debt,
-    })
-  } catch (err) {
-    console.log(err)
-    return res.status(500).json({
-      success: false,
-      message: err.toString(),
-    })
-  }
+	try {
+		const d = await Debt.find()
+		const debt = d
+		// .filter(
+		// 	(item) => item.isEnabled === true && item.state === false
+		// )
+		return res.json({
+			success: true,
+			debt: debt
+		})
+	} catch (err) {
+		console.log(err)
+		return res.status(500).json({
+			success: false,
+			message: err.toString()
+		})
+	}
 })
 router.get('/receivers', async (req, res) => {
   try {
@@ -485,7 +454,8 @@ router.post('/transfer', isTrustlyOTP, async (req, res) => {
     }
     report.message = message
     report.amount = amount
-    report.isSenderPaidFee = !!isSenderPaidFee
+	report.isSenderPaidFee = !!isSenderPaidFee
+	report.createAt = +new Date() 
     await report.save()
     return res.json({
       success: true,
@@ -499,7 +469,28 @@ router.post('/transfer', isTrustlyOTP, async (req, res) => {
     })
   }
 })
-
+router.get('/getTransaction', async (req, res) => {
+	try {
+		const transaction = await Transaction.find()
+		if(transaction){
+			return res.json({
+				success: true,
+				transaction: transaction
+			})
+		}else{
+			return res.status(400).json({
+				success: false,
+				message: 'transaction not found'
+			})
+		}
+	} catch (error) {
+		console.log(err)
+		return res.status(500).json({
+			success: false,
+			message: err.toString()
+		})
+	}
+})
 //HHBANK
 router.get('/hhbank/getInfo', async (req, res) => {
   try {
