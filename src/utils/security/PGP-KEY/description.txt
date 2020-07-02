@@ -1,0 +1,3 @@
+Cặp khóa PGP trong folder này là cặp khóa PGP chính thức của SAMCOMBANK (Để gọi api của HHBANK)
+Private-Key: dùng để kí.
+Public-key: để chia sẽ cho đối tác nhằm xác thực chữ kí của SAMCOMBANK

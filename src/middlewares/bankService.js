@@ -36,10 +36,10 @@ const isPartner = (req, res, next) => {
     }
 
     //4. Kiểm tra và giải mã RSA
-    const method = PARTNER_ENCRYPT_METHOD[bankName]
+    const method = PARTNER_ENCRYPT_METHOD[bankName.toLowerCase()]
     const partnerKey = fs.readFileSync(
       path.resolve(
-        __dirname + `/../utils/partner-key/${bankName}-PublicKey.pem`
+        __dirname + `/../utils/partner-key/${bankName.toLowerCase()}-PublicKey.pem`
       ),
       'utf8'
     )
@@ -48,7 +48,7 @@ const isPartner = (req, res, next) => {
     }
     const { message } = content
     const privateKey = fs.readFileSync(
-      path.resolve(__dirname + '/../utils/security/privateKey.pem'),
+      path.resolve(__dirname + '/../utils/security/RSA-KEY/privateKey.pem'),
       'utf8'
     )
     const publicKey_Partner = new NodeRSA(partnerKey)
@@ -60,7 +60,7 @@ const isPartner = (req, res, next) => {
     } catch (error) {
       throw createError(406, 'Message is incorrect!')
     }
-    req.bankName = bankName
+    req.bankName = bankName.toLowerCase()
     req.ventureInfo = { publicKey_Partner, privateKey_Sacombank }
 
     next()

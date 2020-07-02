@@ -7,8 +7,8 @@ const Transaction = new Schema(
 		amount: { type: Number },
 		message: { type: String, default: '' },
 		success: { type: Boolean, default: true },
-		isInterbankTrans: { type: Boolean, default: false },
-    isSenderPaidFee: { type: Boolean, default: true }
+		isSenderPaidFee: { type: Boolean, default: true },
+		createdAt: { type: Number, default: +new Date() }
 	},
 	{
 		versionKey: false // remove field "__v"

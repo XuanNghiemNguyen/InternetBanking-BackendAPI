@@ -14,6 +14,7 @@ const isAuthenticated = (req, res, next) => {
       if (!user || !user.isEnabled) {
         return next(createError(401, 'this account not found or was blocked!'))
       }
+      req.tokenPayload.email = user.email
       next()
     })
   } else {

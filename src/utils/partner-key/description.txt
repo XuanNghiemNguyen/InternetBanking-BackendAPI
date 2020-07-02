@@ -1,0 +1,3 @@
+2 Key trong folder này để là RSA key.
+Cụ thể là mỗi đối tác (dù là PGP hay RSA) đều cần có một cặp khóa RSA để giao dịch với SACOMBANK
+SACOMBANK dùng public-key của đối tác tương ứng để gửi response-message, sau đó kí bằng RSA-private-key của SACOMBANK
