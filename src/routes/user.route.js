@@ -508,6 +508,7 @@ router.get('/hhbank/getInfo', async (req, res) => {
         success: true,
         user: {
           name: data.data,
+          bank_name: 'hhbank'
         },
       })
     } else {
@@ -525,7 +526,7 @@ router.get('/hhbank/getInfo', async (req, res) => {
   }
 })
 
-router.post('/hhbank/transfer', async (req, res) => {
+router.post('/hhbank/transfer', isTrustlyOTP, async (req, res) => {
   try {
     const { email } = req.tokenPayload
     let {
@@ -629,8 +630,8 @@ router.post('/hhbank/transfer', async (req, res) => {
   }
 })
 
-//TEAM 29
-router.get('/team29/getInfo', async (req, res) => {
+// Agribank
+router.get('/agribank/getInfo', async (req, res) => {
   try {
     const { number } = req.query
     if (!number) {
@@ -645,6 +646,7 @@ router.get('/team29/getInfo', async (req, res) => {
         success: true,
         user: {
           name: data.payload.userName,
+          bank_name: 'agribank'
         },
       })
     } else {
@@ -662,7 +664,7 @@ router.get('/team29/getInfo', async (req, res) => {
   }
 })
 
-router.post('/team29/transfer', async (req, res) => {
+router.post('/agribank/transfer', async (req, res) => {
   try {
     const { email } = req.tokenPayload
     let {
@@ -741,9 +743,9 @@ router.post('/team29/transfer', async (req, res) => {
       number: numberResource,
     }
     report.receiver = {
-      name: receiver.data,
+      name: receiver.payload.userName,
       number: numberReceiver,
-      bank: 'AGRIBANK'
+      bank_name: 'AGRIBANK'
     }
     report.message = message
     report.amount = amount
