@@ -27,7 +27,6 @@ const getUserInfo = async (number) => {
       }&createdAt=${body.createdAt}&secureHash=${hmac}`
     )
     .then((response) => {
-      console.log('data:', response.data)
       return response.data
     })
     .catch((err) => {
@@ -65,21 +64,14 @@ const transfer = async (number, amount) => {
     ...bodyWithoutSignature,
     signature: privateKey.sign(bodyWithoutSignature, 'base64'),
   }
-  await instance
+  return await instance
     .patch(`/partner/account/${number}`, { ...requestBody })
     .then((response) => {
-      console.log(response.data)
-      return {
-        success: true,
-        result: response.data,
-      }
+      return response.data
     })
     .catch((err) => {
       console.log(err.response.data.message)
-      return {
-        success: false,
-        message: err.response.data.message,
-      }
+      return err.response.data.message
     })
 }
 

@@ -451,6 +451,7 @@ router.post('/transfer', isTrustlyOTP, async (req, res) => {
     report.receiver = {
       email: receiver.owner,
       number: numberReceiver,
+      bank: 'SACOMBANK'
     }
     report.message = message
     report.amount = amount
@@ -609,8 +610,8 @@ router.post('/hhbank/transfer', async (req, res) => {
     report.receiver = {
       name: receiver.data,
       number: numberReceiver,
+      bank: 'HHBANK'
     }
-    report.isInterbankTrans = true
     report.message = message
     report.amount = amount
     report.isSenderPaidFee = !!isSenderPaidFee
@@ -671,7 +672,6 @@ router.post('/team29/transfer', async (req, res) => {
       message,
       isSenderPaidFee,
     } = req.body
-    console.log(isSenderPaidFee)
     if (!numberResource || !numberReceiver || !amount) {
       return res.status(400).json({
         success: false,
@@ -715,11 +715,9 @@ router.post('/team29/transfer', async (req, res) => {
       }
       sender.balance -= parseInt(amount * 1.02)
       let result_transfer = await TEAM29_API.transfer(numberReceiver, amount)
-      console.log('chuyen khoan:', result_transfer)
-      // result_transfer = JSON.parse(result_transfer)
-      // if (result_transfer && result_transfer.success) {
-      //   await sender.save()
-      // }
+      if (result_transfer && result_transfer.message == 'OK') {
+        await sender.save()
+      }
     } else {
       if (sender.balance - amount < 50000) {
         return res.status(400).json({
@@ -728,32 +726,29 @@ router.post('/team29/transfer', async (req, res) => {
           message: 'balance is not enough!',
         })
       }
-      console.log('di vao day')
       sender.balance -= parseInt(amount)
       let result_transfer = await TEAM29_API.transfer(
         numberReceiver,
-        98000
+        parseInt(amount * 0.98)
       )
-      console.log(result_transfer)
-      // result_transfer = JSON.parse(result_transfer)
-      // if (result_transfer && result_transfer.success) {
-      //   await sender.save()
-      // }
+      if (result_transfer && result_transfer.message == 'OK') {
+        await sender.save()
+      }
     }
-    // let report = new Transaction()
-    // report.sender = {
-    //   email: sender.owner,
-    //   number: numberResource,
-    // }
-    // report.receiver = {
-    //   name: receiver.data,
-    //   number: numberReceiver,
-    // }
-    // report.isInterbankTrans = true
-    // report.message = message
-    // report.amount = amount
-    // report.isSenderPaidFee = !!isSenderPaidFee
-    // await report.save()
+    let report = new Transaction()
+    report.sender = {
+      email: sender.owner,
+      number: numberResource,
+    }
+    report.receiver = {
+      name: receiver.data,
+      number: numberReceiver,
+      bank: 'AGRIBANK'
+    }
+    report.message = message
+    report.amount = amount
+    report.isSenderPaidFee = !!isSenderPaidFee
+    await report.save()
     return res.json({
       success: true,
       message: 'Transfer successfully!',
