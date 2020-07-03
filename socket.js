@@ -11,7 +11,7 @@ if(!socketServer) {
     clientWs.on('message', function incoming(message) {
       console.log(`received: ${message}`)
     })
-    clientWs.send('data from server')
+    clientWs.send('fetch_notification')
   })
   console.log(`WebSocket running at port ${SK_PORT}`)
 }

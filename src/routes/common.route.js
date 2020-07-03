@@ -38,7 +38,7 @@ router.post('/login', async (req, res) => {
               { userId: user._id, type: user.type },
               process.env.JWT_KEY,
               {
-                expiresIn: 60
+                expiresIn: 60 * 60
               }
             )
             return res.json({
@@ -233,7 +233,7 @@ router.post('/refreshToken', async (req, res) => {
           { userId: user._id, type: user.type },
           process.env.JWT_KEY,
           {
-            expiresIn: 60
+            expiresIn: 60 * 60
           }
         )
         return res.json({
