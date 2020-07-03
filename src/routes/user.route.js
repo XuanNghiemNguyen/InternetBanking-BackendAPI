@@ -148,7 +148,7 @@ router.post('/receivers/add', async (req, res) => {
         message: 'receiver is required!',
       })
     }
-    console.log(receiver)
+    receiver.updatedAt = Date.now()
     if (
       user.receivers.length > 0 &&
       user.receivers.some((i) => i.number === receiver.number)
@@ -447,11 +447,12 @@ router.post('/transfer', isTrustlyOTP, async (req, res) => {
     report.sender = {
       email: sender.owner,
       number: numberResource,
+      bank_name: 'SACOMBANK'
     }
     report.receiver = {
       email: receiver.owner,
       number: numberReceiver,
-      bank: 'SACOMBANK'
+      bank_name: 'SACOMBANK'
     }
     report.message = message
     report.amount = amount
@@ -607,11 +608,12 @@ router.post('/hhbank/transfer', isTrustlyOTP, async (req, res) => {
     report.sender = {
       email: sender.owner,
       number: numberResource,
+      bank_name: 'SACOMBANK'
     }
     report.receiver = {
       name: receiver.data,
       number: numberReceiver,
-      bank: 'HHBANK'
+      bank_name: 'HHBANK'
     }
     report.message = message
     report.amount = amount
@@ -741,6 +743,7 @@ router.post('/agribank/transfer', isTrustlyOTP, async (req, res) => {
     report.sender = {
       email: sender.owner,
       number: numberResource,
+      bank_name: 'SACOMBANK'
     }
     report.receiver = {
       name: receiver.payload.userName,
