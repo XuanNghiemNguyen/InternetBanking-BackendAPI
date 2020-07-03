@@ -107,7 +107,7 @@ router.post('/receiveHistory',async(req,res)=>{
   if(!isExit){
     res.json({
       success:false,
-      message:"Tài khoản không tồn tại!"
+      message:"Tài khoảng không tồn tại!"
     })
   } else {
   const results = await Transaction.find({"receiver.number":stk})
@@ -140,7 +140,7 @@ router.post('/debtHistory',async(req,res)=>{
  
   const {stk} = req.body;
   
-    const account = await Account.findOne({ number: stk, isPayment: true })
+    const account = await Account.findOne({ number: stk})
     if(account ==null){
      res.json({
        success:false,
