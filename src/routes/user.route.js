@@ -3,12 +3,22 @@ const router = express.Router()
 const User = require('../models/user')
 const Account = require('../models/account')
 const Transaction = require('../models/transaction')
+const Notification = require('../models/notification')
 const Debt = require('../models/debt')
 const bcrypt = require('bcryptjs')
 const HHBANK_API = require('../services/hhbank')
 const TEAM29_API = require('../services/agribank')
 const { isTrustlyOTP } = require('../middlewares/auth')
 // const { TooManyRequests } = require('http-errors')
+
+const getDateString = () => {
+  const now = new Date().toLocaleString('en-US', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+  })
+  const time = now.split(', ')[1]
+  const date = now.split(', ')[0].split('/')
+  return `${time} - ngày ${date[1]}, tháng ${date[0]}, năm ${date[2]}`
+}
 
 router.get('/getListAccount', async (req, res) => {
   try {
@@ -41,8 +51,8 @@ router.get('/getUserByEmail', async (req, res) => {
         success: false,
         message: 'Email is required!',
       })
-	}
-	console.log(email)
+    }
+    console.log(email)
     const user = await User.find({ email: email, isEnabled: true })
     return res.json({
       success: true,
@@ -197,60 +207,61 @@ router.post('/sendDebt', async (req, res) => {
   }
 })
 router.post('/cancelDebt', async (req, res) => {
-	try {
-		const { info } = req.body
-		if (!info) {
-			return res.status(400).json({
-				success: false,
-				message: 'info is required!'
-			})
-		}
-		const debt = await Debt.findOne(info)
-		debt.isEnabled = false
-		debt.save()
-		const d = await Debt.find()
-		const newDebts = d.filter(
-			(item) => item.isEnabled === true && item.state === false
-		)
-		return res.json({
-			success: true,
-			debt: newDebts
-		})
-	} catch (err) {
-		console.log(err)
-		return res.status(500).json({
-			success: false,
-			message: err.toString()
-		})
-	}
+  try {
+    const { info } = req.body
+    if (!info) {
+      return res.status(400).json({
+        success: false,
+        message: 'info is required!',
+      })
+    }
+    const debt = await Debt.findOne(info)
+    debt.isEnabled = false
+    debt.save()
+    const d = await Debt.find()
+    const newDebts = d.filter(
+      (item) => item.isEnabled === true && item.state === false
+    )
+    return res.json({
+      success: true,
+      debt: newDebts,
+    })
+  } catch (err) {
+    console.log(err)
+    return res.status(500).json({
+      success: false,
+      message: err.toString(),
+    })
+  }
 })
 router.post('/payDebt', async (req, res) => {
-	try {
-		const { info } = req.body
-		console.log(info)
-		if (!info) {
-			return res.status(400).json({
-				success: false,
-				message: 'info is required!'
-			})
-		}
-		const fromAccount = await Account.findOne({
-			number: parseInt(info.fromAccount)
-		})
-		fromAccount.balance = fromAccount.balance + parseInt(info.amount)
-		fromAccount.save()
+  try {
+    const { info } = req.body
+    console.log(info)
+    if (!info) {
+      return res.status(400).json({
+        success: false,
+        message: 'info is required!',
+      })
+    }
+    const fromAccount = await Account.findOne({
+      number: parseInt(info.fromAccount),
+    })
+    fromAccount.balance = fromAccount.balance + parseInt(info.amount)
+    fromAccount.save()
 
-		const toAccount = await Account.findOne({
-			number: parseInt(info.toAccount)
-		})
-		toAccount.balance = toAccount.balance - parseInt(info.amount) - parseInt(info.fee)
-		toAccount.save()
+    const toAccount = await Account.findOne({
+      number: parseInt(info.toAccount),
+    })
+    toAccount.balance =
+      toAccount.balance - parseInt(info.amount) - parseInt(info.fee)
+    toAccount.save()
 
-		const debt = await Debt.findOne(info)
-		console.log(debt)
-		debt.state = true
-		debt.paidAt = +new Date()
-		debt.save()
+    const debt = await Debt.findOne(info)
+    console.log(debt)
+    debt.state = true
+    debt.paidAt = +new Date()
+    debt.save()
 
     return res.json({
       success: true,
@@ -264,23 +275,23 @@ router.post('/payDebt', async (req, res) => {
   }
 })
 router.get('/getDebt', async (req, res) => {
-	try {
-		const d = await Debt.find()
-		const debt = d
-		// .filter(
-		// 	(item) => item.isEnabled === true && item.state === false
-		// )
-		return res.json({
-			success: true,
-			debt: debt
-		})
-	} catch (err) {
-		console.log(err)
-		return res.status(500).json({
-			success: false,
-			message: err.toString()
-		})
-	}
+  try {
+    const d = await Debt.find()
+    const debt = d
+    // .filter(
+    // 	(item) => item.isEnabled === true && item.state === false
+    // )
+    return res.json({
+      success: true,
+      debt: debt,
+    })
+  } catch (err) {
+    console.log(err)
+    return res.status(500).json({
+      success: false,
+      message: err.toString(),
+    })
+  }
 })
 router.get('/receivers', async (req, res) => {
   try {
@@ -398,7 +409,6 @@ router.post('/transfer', isTrustlyOTP, async (req, res) => {
         message: 'Amount must be a multiple of 10000!',
       })
     }
-    console.log(email)
     const sender = await Account.findOne({
       number: numberResource,
       owner: email,
@@ -418,6 +428,7 @@ router.post('/transfer', isTrustlyOTP, async (req, res) => {
         message: 'receiver is not found!',
       })
     }
+    let realAmountReceive = parseInt(amount)
     if (isSenderPaidFee) {
       if (sender.balance - amount * 1.01 < 50000) {
         return res.status(400).json({
@@ -440,6 +451,7 @@ router.post('/transfer', isTrustlyOTP, async (req, res) => {
       }
       sender.balance -= parseInt(amount)
       receiver.balance += parseInt(amount * 0.99)
+      realAmountReceive = parseInt(amount * 0.99)
       await sender.save()
       await receiver.save()
     }
@@ -447,18 +459,22 @@ router.post('/transfer', isTrustlyOTP, async (req, res) => {
     report.sender = {
       email: sender.owner,
       number: numberResource,
-      bank_name: 'SACOMBANK'
+      bank_name: 'SACOMBANK',
     }
     report.receiver = {
       email: receiver.owner,
       number: numberReceiver,
-      bank_name: 'SACOMBANK'
+      bank_name: 'SACOMBANK',
     }
     report.message = message
     report.amount = amount
-	report.isSenderPaidFee = !!isSenderPaidFee
-	report.createAt = +new Date() 
+    report.isSenderPaidFee = !!isSenderPaidFee
+    report.createAt = +new Date()
     await report.save()
+    let notify = new Notification()
+    notify.owner = receiver.owner
+    notify.content = `Tài khoản SAC_${numberReceiver} vừa nhận ${realAmountReceive.toLocaleString()} đ từ tài khoản SAC_${numberResource} vào lúc ${getDateString()}, xem chi tiết trong mục lịch sử nhận tiền`
+    await notify.save()
     return res.json({
       success: true,
       message: 'Transfer successfully!',
@@ -472,26 +488,26 @@ router.post('/transfer', isTrustlyOTP, async (req, res) => {
   }
 })
 router.get('/getTransaction', async (req, res) => {
-	try {
-		const transaction = await Transaction.find()
-		if(transaction){
-			return res.json({
-				success: true,
-				transaction: transaction
-			})
-		}else{
-			return res.status(400).json({
-				success: false,
-				message: 'transaction not found'
-			})
-		}
-	} catch (error) {
-		console.log(err)
-		return res.status(500).json({
-			success: false,
-			message: err.toString()
-		})
-	}
+  try {
+    const transaction = await Transaction.find()
+    if (transaction) {
+      return res.json({
+        success: true,
+        transaction: transaction,
+      })
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'transaction not found',
+      })
+    }
+  } catch (error) {
+    console.log(err)
+    return res.status(500).json({
+      success: false,
+      message: err.toString(),
+    })
+  }
 })
 //HHBANK
 router.get('/hhbank/getInfo', async (req, res) => {
@@ -509,7 +525,7 @@ router.get('/hhbank/getInfo', async (req, res) => {
         success: true,
         user: {
           name: data.data,
-          bank_name: 'hhbank'
+          bank_name: 'hhbank',
         },
       })
     } else {
@@ -608,12 +624,12 @@ router.post('/hhbank/transfer', isTrustlyOTP, async (req, res) => {
     report.sender = {
       email: sender.owner,
       number: numberResource,
-      bank_name: 'SACOMBANK'
+      bank_name: 'SACOMBANK',
     }
     report.receiver = {
       name: receiver.data,
       number: numberReceiver,
-      bank_name: 'HHBANK'
+      bank_name: 'HHBANK',
     }
     report.message = message
     report.amount = amount
@@ -648,7 +664,7 @@ router.get('/agribank/getInfo', async (req, res) => {
         success: true,
         user: {
           name: data.payload.userName,
-          bank_name: 'agribank'
+          bank_name: 'agribank',
         },
       })
     } else {
@@ -743,12 +759,12 @@ router.post('/agribank/transfer', isTrustlyOTP, async (req, res) => {
     report.sender = {
       email: sender.owner,
       number: numberResource,
-      bank_name: 'SACOMBANK'
+      bank_name: 'SACOMBANK',
     }
     report.receiver = {
       name: receiver.payload.userName,
       number: numberReceiver,
-      bank_name: 'AGRIBANK'
+      bank_name: 'AGRIBANK',
     }
     report.message = message
     report.amount = amount
