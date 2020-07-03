@@ -28,7 +28,8 @@
     "nodemailer": "^6.4.8",
     "openpgp": "^4.10.4",
     "rand-token": "^1.0.1",
-    "uuidv4": "^6.0.6"
+    "uuidv4": "^6.0.6",
+    "ws": "^7.3.0"
   },
   "author": "XuanNghiemNguyen",
   "license": "ISC",
