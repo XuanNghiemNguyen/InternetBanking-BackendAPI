@@ -664,7 +664,7 @@ router.get('/agribank/getInfo', async (req, res) => {
   }
 })
 
-router.post('/agribank/transfer', async (req, res) => {
+router.post('/agribank/transfer', isTrustlyOTP, async (req, res) => {
   try {
     const { email } = req.tokenPayload
     let {
