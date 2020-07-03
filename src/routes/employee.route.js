@@ -30,7 +30,6 @@ router.post('/deposit',async(req,res)=>{
     })
     }
     catch(err){
-        console.log(err)
         return res.status(500).json({
         success: false,
         message: error
@@ -103,15 +102,14 @@ router.post('/receiveHistory',async(req,res)=>{
   
 
   const isExit = await Account.findOne({number:stk,isEnabled:true})
-  
+  console.log(isExit)
   if(!isExit){
     res.json({
       success:false,
       message:"Tài khoảng không tồn tại!"
     })
   } else {
-  const results = await Transaction.find({"receiver.number":stk})
-  console.log(results)
+  const results = await Transaction.find({"receiver.number":parseInt(stk)})
   res.json({
     success:true,
     result:results
@@ -120,7 +118,7 @@ router.post('/receiveHistory',async(req,res)=>{
 router.post('/sendHistory',async(req,res)=>{
  
   const {stk} = req.body;
-  
+
     const account = await Account.findOne({ number: stk, isPayment: true })
     if(account ==null){
      res.json({
@@ -128,9 +126,8 @@ router.post('/sendHistory',async(req,res)=>{
        message:"Tài khoản không tồn tại !"
      })
     }
-    
-     
-    const senders = await Transaction.find({"sender.number":stk})
+  
+    const senders = await Transaction.find({'sender.number':parseInt(stk)})
     return res.json({
       success:true,
       result:senders
@@ -153,8 +150,7 @@ router.post('/debtHistory',async(req,res)=>{
     const to= await Debt.find({toAccount:stk,state:true})
     return res.json({
       success:true,
-      from:from,
-      to:to
+      results :from.concat(to)
     })
 })
 module.exports = router;
