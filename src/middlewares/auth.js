@@ -7,7 +7,21 @@ const isAuthenticated = (req, res, next) => {
   const token = req.headers['access-token']
   if (token) {
     jwt.verify(token, process.env.JWT_KEY, async (err, payload) => {
-      if (err) return next(createError(401, err))
+      if (err) {
+        if (err.message === 'jwt expired') {
+          return res.status(421).json({
+            code: 421,
+            success: false,
+            message: 'Access-token hết hạn sử dụng!',
+          })
+        } else {
+          return res.status(421).json({
+            code: 425,
+            success: false,
+            message: 'Access-token không hợp lệ!',
+          })
+        }
+      }
       req.tokenPayload = payload
       const { userId } = payload
       const user = await User.findById(userId)
@@ -49,7 +63,7 @@ const isTrustlyOTP = async (req, res, next) => {
     }
     req.payload = {
       user,
-      user_Verify
+      user_Verify,
     }
     user_Verify.isUsed = true
     await user_Verify.save()
@@ -59,5 +73,5 @@ const isTrustlyOTP = async (req, res, next) => {
 
 module.exports = {
   isAuthenticated,
-  isTrustlyOTP
+  isTrustlyOTP,
 }
