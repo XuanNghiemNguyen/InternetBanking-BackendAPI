@@ -73,6 +73,8 @@ const connectDatabase = () => {
     }
   )
 }
+
+require('./socket')
 //Init apiServer
 app.listen(apiPort, () => {
   connectDatabase()

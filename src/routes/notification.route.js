@@ -6,7 +6,6 @@ router.get('/all', async (req, res) => {
   try {
     const { email } = req.tokenPayload
     const notification = await Notification.find({ owner: email })
-    console.log(notification)
     if (notification && notification.length) {
       return res.json({
         success: true,

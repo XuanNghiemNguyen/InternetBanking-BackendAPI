@@ -9,6 +9,8 @@ const bcrypt = require('bcryptjs')
 const HHBANK_API = require('../services/hhbank')
 const TEAM29_API = require('../services/agribank')
 const { isTrustlyOTP } = require('../middlewares/auth')
+const { updateNotification } = require('../../socket')
+
 // const { TooManyRequests } = require('http-errors')
 
 const getDateString = () => {
@@ -475,6 +477,7 @@ router.post('/transfer', isTrustlyOTP, async (req, res) => {
     notify.owner = receiver.owner
     notify.content = `Tài khoản SAC_${numberReceiver} vừa nhận ${realAmountReceive.toLocaleString()} đ từ tài khoản SAC_${numberResource} vào lúc ${getDateString()}, xem chi tiết trong mục lịch sử nhận tiền`
     await notify.save()
+    updateNotification()
     return res.json({
       success: true,
       message: 'Transfer successfully!',
