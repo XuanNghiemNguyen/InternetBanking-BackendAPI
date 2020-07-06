@@ -196,6 +196,13 @@ router.post('/sendDebt', async (req, res) => {
       })
     }
     const debt = await Debt.insertMany(info)
+    const receiver = await Account.findOne({ number: info.toAccount })
+    let notify = new Notification()
+    notify.owner = receiver.owner
+    notify.content = `Tài khoản SAC_${info.fromAccount} vừa gửi nhắc nợ cho tài khoản SAC_${info.toAccount} vào lúc ${getDateString()}, xem thông tin chi tiết tại mục Danh sách nhắc nợ`
+    await notify.save()
+    updateNotification()
+    console.log(receiver)
     return res.json({
       success: true,
       debt: debt,
@@ -210,7 +217,8 @@ router.post('/sendDebt', async (req, res) => {
 })
 router.post('/cancelDebt', async (req, res) => {
   try {
-    const { info } = req.body
+    const { info, email } = req.body
+
     if (!info) {
       return res.status(400).json({
         success: false,
@@ -224,6 +232,23 @@ router.post('/cancelDebt', async (req, res) => {
     const newDebts = d.filter(
       (item) => item.isEnabled === true && item.state === false
     )
+    const senderNumber = await Account.findOne({ number: parseInt(info.fromAccount) })
+    const receiverNumber = await Account.findOne({ number: info.toAccount })
+
+    if (senderNumber.owner === email) {
+      let notify = new Notification()
+      notify.owner = receiverNumber.owner
+      notify.content = `Tài khoản SAC_${info.fromAccount}(chủ nợ) vừa hủy nhắc nợ cho tài khoản SAC_${info.toAccount} vào lúc ${getDateString()}, xem thông tin chi tiết tại mục Danh sách nhắc nợ`
+      await notify.save()
+      updateNotification()
+    }
+    if (receiverNumber.owner === email) {
+      let notify = new Notification()
+      notify.owner = senderNumber.owner
+      notify.content = `Tài khoản SAC_${info.toAccount}(người nợ) vừa hủy nhắc nợ cho tài khoản SAC_${info.fromAccount} vào lúc ${getDateString()}, xem thông tin chi tiết tại mục Danh sách nhắc nợ`
+      await notify.save()
+      updateNotification()
+    }
     return res.json({
       success: true,
       debt: newDebts,
@@ -264,7 +289,11 @@ router.post('/payDebt', async (req, res) => {
     debt.state = true
     debt.paidAt = +new Date()
     debt.save()
-
+    let notify = new Notification()
+    notify.owner = fromAccount.owner
+    notify.content = `Tài khoản SAC_${info.toAccount}(người nợ) vừa trả nợ cho tài khoản SAC_${info.fromAccount} vào lúc ${getDateString()}, xem thông tin chi tiết tại mục Danh sách nhắc nợ`
+    await notify.save()
+    updateNotification()
     return res.json({
       success: true,
     })
