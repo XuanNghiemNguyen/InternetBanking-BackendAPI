@@ -327,6 +327,7 @@ router.get('/getDebt', async (req, res) => {
 router.get('/receivers', async (req, res) => {
   try {
     const { userId } = req.tokenPayload
+    updateNotification()
     const user = await User.findById(userId)
     if (!user) {
       return res.status(400).json({

@@ -18,6 +18,7 @@ if(!socketServer) {
 
 const updateNotification = () => {
   for(let c of socketServer.clients) {
+    console.log(c)
     if (c.readyState === WebSocket.OPEN) {
       c.send('fetch_notification')
     }
