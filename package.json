@@ -21,6 +21,7 @@
     "http-errors": "^1.7.3",
     "jsonwebtoken": "^8.5.1",
     "md5": "^2.2.1",
+    "mocha": "^8.0.1",
     "moment": "^2.26.0",
     "mongodb": "^3.5.4",
     "mongoose": "^5.9.3",
@@ -29,6 +30,7 @@
     "nodemailer": "^6.4.8",
     "openpgp": "^4.10.4",
     "rand-token": "^1.0.1",
+    "supertest": "^4.0.2",
     "uuidv4": "^6.0.6",
     "ws": "^7.3.0"
   },
