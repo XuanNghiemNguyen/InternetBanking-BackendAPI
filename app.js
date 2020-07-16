@@ -21,7 +21,7 @@ app.use(cookieParser())
 
 // Some route
 app.get('/', (req, res) => {
-  res.send('Sacombank Internet Banking API')
+  res.send('Sacombank Internet Banking - API')
 })
 
 app.use('/static', express.static(path.join(__dirname, 'public')))
