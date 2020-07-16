@@ -13,7 +13,15 @@ jobs:
             - run: npm install
             - run: npm test
   deploy:
-    - heroku/deploy-via-git
+    executor: heroku/default
+    steps:
+      - checkout
+      - heroku/install
+      - run:
+          command: >
+            echo "The command above installs Heroku, the command below deploys.
+            What you do inbetween is up to you!"
+      - heroku/deploy-via-git
 workflows:
     build-and-test-and-deploy:
       jobs:
