@@ -5,9 +5,7 @@ const Notification = require("../models/notification")
 router.get("/all", async (req, res) => {
   try {
     const { email } = req.tokenPayload
-    const notification = await Notification.find({ owner: email }).sort({
-      createdAt: -1,
-    })
+    const notification = await Notification.find({ owner: email })
     if (notification) {
       return res.json({
         success: true,
@@ -30,25 +28,18 @@ router.get("/all", async (req, res) => {
 
 router.get("/read", async (req, res) => {
   try {
-    const { id } = req.query
-    if (!id) {
-      return res.json({
-        success: false,
-        message: "API này cần id của thông báo!",
-      })
-    }
-    const notification = Notification.findById(id)
+    const { email } = req.tokenPayload
+    await Notification.updateMany({}, { $set: { isRead: true } })
+    const notification = await Notification.find({ owner: email })
     if (notification) {
-      notification.isRead = true
-      await notification.save()
       return res.json({
         success: true,
-        result: notification,
+        result: notification || [],
       })
     } else {
-      return res.res.status(400).json({
+      return res.status(400).json({
         success: false,
-        message: "Không có thông báo này!",
+        message: "Người dùng này chưa có thông báo nào",
       })
     }
   } catch (error) {
