@@ -218,7 +218,6 @@ router.post('/sendDebt', async (req, res) => {
 router.post('/cancelDebt', async (req, res) => {
   try {
     const { info, email } = req.body
-
     if (!info) {
       return res.status(400).json({
         success: false,
