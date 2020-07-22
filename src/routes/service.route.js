@@ -98,7 +98,7 @@ router.post("/transfer", async (req, res) => {
             account.save()
             let report = new Transaction()
             report.sender = {
-              email: `user@${req.bankName}.com`,
+              email: `user@${req.bankName.toLowerCase()}.com`,
               number: numberSender,
               bank_name: req.bankName,
             }
