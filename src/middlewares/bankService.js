@@ -60,7 +60,7 @@ const isPartner = (req, res, next) => {
     } catch (error) {
       throw createError(406, 'Message is incorrect!')
     }
-    req.bankName = bankName.toLowerCase()
+    req.bankName = bankName.toUpperCase()
     req.ventureInfo = { publicKey_Partner, privateKey_Sacombank }
 
     next()

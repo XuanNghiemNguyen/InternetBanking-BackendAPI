@@ -237,14 +237,14 @@ router.post('/cancelDebt', async (req, res) => {
     if (senderNumber.owner === email) {
       let notify = new Notification()
       notify.owner = receiverNumber.owner
-      notify.content = `Tài khoản SAC_${info.fromAccount}(chủ nợ) vừa hủy nhắc nợ cho tài khoản SAC_${info.toAccount} vào lúc ${getDateString()}, xem thông tin chi tiết tại mục Danh sách nhắc nợ`
+      notify.content = `Tài khoản SAC_${info.fromAccount} (chủ nợ) vừa hủy nhắc nợ cho tài khoản SAC_${info.toAccount} vào lúc ${getDateString()}, xem thông tin chi tiết tại mục Danh sách nhắc nợ`
       await notify.save()
       updateNotification()
     }
     if (receiverNumber.owner === email) {
       let notify = new Notification()
       notify.owner = senderNumber.owner
-      notify.content = `Tài khoản SAC_${info.toAccount}(người nợ) vừa hủy nhắc nợ cho tài khoản SAC_${info.fromAccount} vào lúc ${getDateString()}, xem thông tin chi tiết tại mục Danh sách nhắc nợ`
+      notify.content = `Tài khoản SAC_${info.toAccount} (người nợ) vừa hủy nhắc nợ cho tài khoản SAC_${info.fromAccount} vào lúc ${getDateString()}, xem thông tin chi tiết tại mục Danh sách nhắc nợ`
       await notify.save()
       updateNotification()
     }
