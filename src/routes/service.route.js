@@ -72,6 +72,7 @@ router.post("/transfer", async (req, res) => {
           numberReceiver,
           numberSender,
           amount,
+          message
         }
         const isValid = publicKey_Partner.verify(
           content,
