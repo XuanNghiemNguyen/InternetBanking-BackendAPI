@@ -6,6 +6,15 @@ const Transaction = require("../models/transaction")
 const Notification = require("../models/notification")
 const { updateNotification } = require('../../socket')
 
+const getDateString = () => {
+  const now = new Date().toLocaleString('en-US', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+  })
+  const time = now.split(', ')[1]
+  const date = now.split(', ')[0].split('/')
+  return `${time} - ngày ${date[1]}, tháng ${date[0]}, năm ${date[2]}`
+}
+
 router.post("/info", async (req, res) => {
   try {
     const { number } = req.body
