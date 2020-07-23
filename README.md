@@ -26,7 +26,7 @@
 + transfer: `./services/accounts/transfer`
 
 ---
-+ get data for test: [sacombank testing](https://repl.it/@XunNghim/sacombank-testing)
++ get data for test: [sacombank testing](https://repl.it/@XunNghim/NEWAPISERVICEINFO)
 + hhbank test: [hhbank testing](https://repl.it/@XunNghim/hhbank-testing)
 + team 29 test: [team29 testing](https://repl.it/@NguyenNgo/rsa-testing)
 ---
