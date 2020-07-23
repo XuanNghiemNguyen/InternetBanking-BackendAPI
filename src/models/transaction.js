@@ -8,7 +8,7 @@ const Transaction = new Schema(
 		message: { type: String, default: '' },
 		success: { type: Boolean, default: true },
 		isSenderPaidFee: { type: Boolean, default: true },
-		createdAt: { type: Number, default: +new Date() }
+		createdAt: { type: Number, default: Date.now() }
 	},
 	{
 		versionKey: false // remove field "__v"

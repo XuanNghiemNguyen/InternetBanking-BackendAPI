@@ -6,8 +6,8 @@ const Transaction = require("../models/transaction")
 const Notification = require("../models/notification")
 const { updateNotification } = require('../../socket')
 
-const getDateString = () => {
-  const now = new Date().toLocaleString('en-US', {
+const getDateString = (ts) => {
+  const now = ts.toLocaleString('en-US', {
     timeZone: 'Asia/Ho_Chi_Minh',
   })
   const time = now.split(', ')[1]
@@ -96,6 +96,7 @@ router.post("/transfer", async (req, res) => {
             account.balance = parseInt(amount) + parseInt(account.balance)
             account.save()
             let report = new Transaction()
+            const ts_now = Date.now()
             report.sender = {
               email: `user@${req.bankName.toLowerCase()}.com`,
               number: numberSender,
@@ -107,16 +108,18 @@ router.post("/transfer", async (req, res) => {
               bank_name: "SACOMBANK",
             }
             report.message = message
+            report.createdAt = ts_now
             report.amount = amount
             await report.save()
             //Gửi thông báo
             let notify = new Notification()
             notify.owner = account.owner
+            notify.createdAt = ts_now
             notify.content = `Số tài khoản SAC_${numberReceiver} vừa nhận được ${amount.toLocaleString()} đ từ tài khoản ${
               req.bankName
             }_${
               numberSender
-            } vào lúc ${getDateString()}, xem thông tin chi tiết tại mục Danh sách nhận tiền`
+            } vào lúc ${getDateString(ts_now)}, xem thông tin chi tiết tại mục Danh sách nhận tiền`
             await notify.save()
             updateNotification()
             response = {

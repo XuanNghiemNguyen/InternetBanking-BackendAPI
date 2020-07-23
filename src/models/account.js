@@ -13,8 +13,8 @@ const AccountSchema = new Schema(
       default: true
     },
     owner: String, //email of user
-    updatedAt: { type: Number, default: +new Date() },
-    createdAt: { type: Number, default: +new Date() }
+    updatedAt: { type: Number, default: Date.now() },
+    createdAt: { type: Number, default: Date.now() }
   },
   {
     versionKey: false // remove field "__v"

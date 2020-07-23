@@ -79,11 +79,13 @@ const privkey = fs.readFileSync(
   'utf8'
 )
 
-const transfer = async (number, amount) => {
+const transfer = async (numberSender, numberReceiver, amount, message) => {
   try {
     const obj = {
-      Number: number,
-      Money: amount,
+      numberSender,
+      numberReceiver,
+      amount,
+      message
     }
 
     openpgp.initWorker({ path: 'openpgp.worker.js' })
