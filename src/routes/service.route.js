@@ -93,7 +93,6 @@ router.post("/transfer", async (req, res) => {
           //transfer
           const account = await Account.findOne({ number: numberReceiver })
           if (account) {
-            const user = await User.findOne({ email: account.owner })
             account.balance = parseInt(amount) + parseInt(account.balance)
             account.save()
             let report = new Transaction()
@@ -103,7 +102,7 @@ router.post("/transfer", async (req, res) => {
               bank_name: req.bankName,
             }
             report.receiver = {
-              name: user.name || account.owner,
+              email: account.owner,
               number: numberReceiver,
               bank_name: "SACOMBANK",
             }

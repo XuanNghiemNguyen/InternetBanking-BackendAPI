@@ -659,7 +659,7 @@ router.post('/hhbank/transfer', isTrustlyOTP, async (req, res) => {
       bank_name: 'SACOMBANK',
     }
     report.receiver = {
-      name: receiver.data,
+      email: receiver.data,
       number: numberReceiver,
       bank_name: 'HHBANK',
     }
@@ -794,7 +794,7 @@ router.post('/agribank/transfer', isTrustlyOTP, async (req, res) => {
       bank_name: 'SACOMBANK',
     }
     report.receiver = {
-      name: receiver.payload.userName,
+      email: receiver.payload.userName,
       number: numberReceiver,
       bank_name: 'AGRIBANK',
     }
