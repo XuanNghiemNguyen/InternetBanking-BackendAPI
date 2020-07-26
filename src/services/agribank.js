@@ -30,7 +30,7 @@ const getUserInfo = async (number) => {
       return response.data
     })
     .catch((err) => {
-      console.log('err', err.response.data.message)
+      console.log('err', err.toString())
       return err.response.data.message
     })
     .finally(function () {
