@@ -32,7 +32,7 @@ app.use('/', require('./src/routes/common.route'))
 app.use('/users', isAuthenticated, require('./src/routes/user.route'))
 app.use('/notifications', isAuthenticated, require('./src/routes/notification.route'))
 app.use('/employee',isAuthenticated, require('./src/routes/employee.route'))
-
+app.use('/admin',isAuthenticated,require('./src/routes/admin.route'))
 
 //handle error
 app.use(function (err, req, res, next) {
