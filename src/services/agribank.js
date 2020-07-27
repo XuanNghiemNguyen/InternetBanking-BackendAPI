@@ -12,7 +12,7 @@ const instance = axios.create({
 })
 
 const getUserInfo = async (number) => {
-  console.log('TEAM29 (agribank) - Quering...')
+  console.log('TEAM29 (agribank) - Quering... number')
   const body = {
     partnerCode: 'rsa_partner',
     createdAt: moment.utc().toISOString(),

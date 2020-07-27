@@ -4,14 +4,14 @@ const Account = require("../models/account")
 const User = require("../models/user")
 const Transaction = require("../models/transaction")
 const Notification = require("../models/notification")
-const { updateNotification } = require('../../socket')
+const { updateNotification } = require("../../socket")
 
 const getDateString = (ts) => {
-  const now = ts.toLocaleString('en-US', {
-    timeZone: 'Asia/Ho_Chi_Minh',
+  const now = ts.toLocaleString("en-US", {
+    timeZone: "Asia/Ho_Chi_Minh",
   })
-  const time = now.split(', ')[1]
-  const date = now.split(', ')[0].split('/')
+  const time = now.split(", ")[1]
+  const date = now.split(", ")[0].split("/")
   return `${time} - ngày ${date[1]}, tháng ${date[0]}, năm ${date[2]}`
 }
 
@@ -58,7 +58,13 @@ router.post("/info", async (req, res) => {
 router.post("/transfer", async (req, res) => {
   try {
     //1. get content
-    const { numberReceiver, numberSender, amount, message, signature } = req.body
+    const {
+      numberReceiver,
+      numberSender,
+      amount,
+      message,
+      signature,
+    } = req.body
     const { privateKey_Sacombank, publicKey_Partner } = req.ventureInfo
     let response = {
       success: false,
@@ -81,7 +87,7 @@ router.post("/transfer", async (req, res) => {
           numberReceiver,
           numberSender,
           amount,
-          message
+          message,
         }
         const isValid = publicKey_Partner.verify(
           content,
@@ -110,6 +116,8 @@ router.post("/transfer", async (req, res) => {
             report.message = message
             report.createdAt = ts_now
             report.amount = amount
+            report.partner = req.bankName.toUpperCase()
+
             await report.save()
             //Gửi thông báo
             let notify = new Notification()
@@ -117,9 +125,9 @@ router.post("/transfer", async (req, res) => {
             notify.createdAt = ts_now
             notify.content = `Số tài khoản SAC_${numberReceiver} vừa nhận được ${amount.toLocaleString()} đ từ tài khoản ${
               req.bankName
-            }_${
-              numberSender
-            } vào lúc ${getDateString(ts_now)}, xem thông tin chi tiết tại mục Danh sách nhận tiền`
+            }_${numberSender} vào lúc ${getDateString(
+              ts_now
+            )}, xem thông tin chi tiết tại mục Danh sách nhận tiền`
             await notify.save()
             updateNotification()
             response = {
