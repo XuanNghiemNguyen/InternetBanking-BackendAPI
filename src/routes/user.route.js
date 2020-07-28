@@ -45,6 +45,53 @@ router.get("/getListAccount", async (req, res) => {
   }
 })
 
+router.post("/getReportTransaction", async (req, res) => {
+  try {
+    const {type} = req.tokenPayload
+    if (!type || type !== 'admin') {
+      return res.status(400).json({
+        success: false,
+        message: "only admin!",
+      })
+    }
+    const { timeStart, timeEnd, bankName } = req.body
+    if (!bankName || !timeStart || !timeEnd) {
+      return res.status(400).json({
+        success: false,
+        message: "bankName, timeStart, timeEnd are required!",
+      })
+    }
+    let transactions = []
+    if (bankName === "ALL") {
+      transactions = await Transaction.find({
+        partner: { $ne: "SACOMBANK" },
+        createdAt: {
+          $gte: timeStart,
+          $lt: timeEnd,
+        },
+      })
+    } else {
+      transactions = await Transaction.find({
+        partner: bankName,
+        createdAt: {
+          $gte: timeStart,
+          $lt: timeEnd,
+        },
+      })
+    }
+    return res.json({
+      success: true,
+      results: transactions,
+    })
+  } catch (err) {
+    console.log(err)
+    return res.status(500).json({
+      success: false,
+      message: err.toString(),
+    })
+  }
+})
+
 router.get("/getUserByEmail", async (req, res) => {
   try {
     const { email } = req.query
@@ -533,7 +580,7 @@ router.post("/transfer", isTrustlyOTP, async (req, res) => {
     report.createdAt = ts_now
     report.amount = amount
     report.isSenderPaidFee = !!isSenderPaidFee
-    report.createAt = ts_now
+    report.createdAt = ts_now
     await report.save()
     let notify = new Notification()
     notify.owner = receiver.owner
@@ -707,6 +754,7 @@ router.post("/hhbank/transfer", isTrustlyOTP, async (req, res) => {
     report.message = message
     report.createdAt = Date.now()
     report.amount = amount
+    report.partner = "HHBANK"
     report.isSenderPaidFee = !!isSenderPaidFee
     await report.save()
     return res.json({
@@ -843,6 +891,7 @@ router.post("/agribank/transfer", isTrustlyOTP, async (req, res) => {
     report.message = message
     report.createdAt = Date.now()
     report.amount = amount
+    report.partner = "AGRIBANK"
     report.isSenderPaidFee = !!isSenderPaidFee
     await report.save()
     return res.json({

@@ -8,6 +8,7 @@ const Transaction = new Schema(
 		message: { type: String, default: '' },
 		success: { type: Boolean, default: true },
 		isSenderPaidFee: { type: Boolean, default: true },
+		partner: { type: String, default: "SACOMBANK" },
 		createdAt: { type: Number, default: Date.now() }
 	},
 	{

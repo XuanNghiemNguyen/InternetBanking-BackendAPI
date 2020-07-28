@@ -8,37 +8,38 @@ const randtoken = require("rand-token")
 const bcrypt = require("bcrypt")
 const saltRounds = 10
 router.post("/deposit", async (req, res) => {
-  try {
+  
     const { stk, amount } = req.body
     if (stk.indexOf("@") == -1) {
       var account = await Account.findOne({ number: stk, isEnabled: true })
       if (account == null) {
-        var error = "Tài khoản không tồn tại"
-      }
+        return res.json({
+          success: false,
+          message:  "Tài khoản không tồn tại",
+        })
+      } else {
       const updateAccount = await Account.findOneAndUpdate(
         { number: stk },
         { $set: { balance: account.balance + parseFloat(amount) } }
-      )
+      )}
     } else {
       var account = await Account.findOne({ owner: stk, isPayment: true })
       if (account == null) {
-        var error = "Email không tồn tại"
-      }
+        return res.json({
+          success: false,
+          message: "Email không tồn tại",
+        })
+      } else {
       const updateAccount = await Account.findOneAndUpdate(
         { number: account.number },
         { $set: { balance: +account.balance + parseFloat(amount) } }
       )
-    }
+    }}
     return res.json({
       success: true,
-      results: account,
+      message: "Nạp thành công",
     })
-  } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: error,
-    })
-  }
+  
 })
 router.post("/createUser", async (req, res) => {
   var { email, phone, name, password, pin } = req.body
