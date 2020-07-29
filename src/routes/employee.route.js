@@ -4,152 +4,271 @@ const User = require("../models/user")
 const Account = require("../models/account")
 const Transaction = require("../models/transaction")
 const Debt = require("../models/debt")
-const randtoken = require("rand-token")
 const bcrypt = require("bcrypt")
+const { stat } = require("fs")
 const saltRounds = 10
-router.post("/deposit", async (req, res) => {
-  
-    const { stk, amount } = req.body
-    if (stk.indexOf("@") == -1) {
-      var account = await Account.findOne({ number: stk, isEnabled: true })
-      if (account == null) {
-        return res.json({
+
+router.post("/getAccount", async (req, res) => {
+  try {
+    if (req.tokenPayload.type !== "employee") {
+      return res.status(400).json({
+        success: false,
+        message: "only employee!",
+      })
+    }
+    const { email_or_number } = req.body
+    if (isNaN(email_or_number)) {
+      const _user = await User.findOne({ email: email_or_number })
+      if (!_user) {
+        return res.status(400).json({
           success: false,
-          message:  "Tài khoản không tồn tại",
+          message: "Không tìm thấy người dùng!",
         })
-      } else {
-      const updateAccount = await Account.findOneAndUpdate(
-        { number: stk },
-        { $set: { balance: account.balance + parseFloat(amount) } }
-      )}
+      }
+      const _account = await Account.findOne({ number: _user.payment })
+      if (!_account) {
+        return res.status(400).json({
+          success: false,
+          message: "Không tìm thấy số tài khoản!",
+        })
+      }
+      return res.json({
+        success: true,
+        results: {
+          name: _user.name,
+          typeAccount: "Thanh toán",
+        },
+      })
     } else {
-      var account = await Account.findOne({ owner: stk, isPayment: true })
-      if (account == null) {
-        return res.json({
+      const _account = await Account.findOne({ number: email_or_number })
+      if (!_account) {
+        return res.status(400).json({
           success: false,
-          message: "Email không tồn tại",
+          message: "Không tìm thấy số tài khoản!",
         })
-      } else {
-      const updateAccount = await Account.findOneAndUpdate(
-        { number: account.number },
-        { $set: { balance: +account.balance + parseFloat(amount) } }
-      )
-    }}
-    return res.json({
-      success: true,
-      message: "Nạp thành công",
+      }
+      const _user = await User.findOne({ email: _account.owner })
+      if (!_user) {
+        return res.status(400).json({
+          success: false,
+          message: "Không tìm thấy người dùng!",
+        })
+      }
+      return res.json({
+        success: true,
+        results: {
+          name: _user.name,
+          typeAccount: _account.isPayment ? "Thanh toán" : "Tiết kiệm",
+        },
+      })
+    }
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({
+      success: false,
+      message: error.toString(),
     })
-  
+  }
+})
+
+router.post("/deposit", async (req, res) => {
+  try {
+    if (req.tokenPayload.type !== "employee") {
+      return res.status(400).json({
+        success: false,
+        message: "only employee!",
+      })
+    }
+    const { email_or_number, amount } = req.body
+    const ts_now = Date.now()
+    let _account = 0
+    if (isNaN(email_or_number)) {
+      const _user = await User.findOne({ email: email_or_number })
+      if (!_user) {
+        return res.status(400).json({
+          success: false,
+          message: "Không tìm thấy số tài khoản!",
+        })
+      }
+      _account = await Account.findOne({ number: _user.payment })
+    } else {
+      _account = await Account.findOne({ number: email_or_number })
+    }
+    if (!_account) {
+      return res.status(400).json({
+        success: false,
+        message: "Không tìm thấy số tài khoản!",
+      })
+    } else {
+      _account.balance = parseInt(_account.balance) + parseInt(amount)
+      _account.updatedAt = ts_now
+      await _account.save()
+      return res.json({
+        success: true,
+        message: "Nạp tiền thành công!",
+      })
+    }
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({
+      success: false,
+      message: error.toString(),
+    })
+  }
 })
 router.post("/createUser", async (req, res) => {
-  var { email, phone, name, password, pin } = req.body
-  var number
-  var check = true
-  const isAvailable = (await User.findOne({ email: email })) ? true : false
-  if (isAvailable == true) {
-    res.json({
-      success: false,
-      message: "Email này đã được sử dụng, vui lòng nhập email khác!",
-    })
-  } else {
-    while (check !== false) {
-      number = Math.floor(Math.random() * 1000000000) + 1000000000
-      check = (await Account.findOne({ number: number, isEnabled: true }))
-        ? true
-        : false
-    }
-
-    const account = {
-      number: number,
-      balance: 0,
-      isPayment: true,
-      isEnabled: true,
-      owner: email,
-      updatedAt: Date.now(),
-      createdAt: Date.now(),
-    }
-    bcrypt.hash(password, saltRounds, (err, hashpass) => {
-      bcrypt.hash(pin, saltRounds, (err, hashpin) => {
-        const user = {
-          type: "normal",
-          name: name,
-          email: email,
-          password: hashpass,
-          pin: hashpin,
-          phone: phone,
-          payment: number, //just one payment account
-          savings: [],
-          receivers: [],
-          refreshToken: randtoken.generate(80),
-          isEnabled: true,
-          isVerified: true,
-          updatedAt: Date.now(),
-          createdAt: Date.now(),
-        }
-
-        User.create(user, function (err, res) {
-          if (err) throw err
-        })
-        Account.create(account, function (err, res) {
-          if (err) throw err
-        })
+  try {
+    if (req.tokenPayload.type !== "employee") {
+      return res.status(400).json({
+        success: false,
+        message: "only employee!",
       })
-    })
+    }
+    const { email, phone, name, password } = req.body
+    const ts_now = Date.now()
+    const isAvailable = await User.findOne({ email })
+    if (isAvailable) {
+      return res.status(400).json({
+        success: false,
+        message: "Email này đã được sử dụng, vui lòng nhập email khác!",
+      })
+    }
+    let number = 0
+    let check = true
+    while (check) {
+      number = Math.floor(Math.random() * 1000000000) + 1000000000
+      check = (await Account.findOne({ number })) ? true : false
+    }
+    let account = new Account()
+    account.number = number
+    account.updatedAt = ts_now
+    account.createdAt = ts_now
+    account.owner = email
+    await account.save()
 
-    res.json({ results: "success!" })
-  }
-})
-router.post("/receiveHistory", async (req, res) => {
-  var { stk } = req.body
+    let _user = new User()
+    _user.name = name
+    _user.phone = phone
+    _user.email = email
+    const hash = bcrypt.hashSync(password, saltRounds)
+    _user.password = hash
+    _user.payment = number
+    _user.updatedAt = ts_now
+    _user.createdAt = ts_now
+    await _user.save()
 
-  const isExit = await Account.findOne({ number: stk, isEnabled: true })
-  console.log(isExit)
-  if (!isExit) {
-    res.json({
-      success: false,
-      message: "Tài khoảng không tồn tại!",
-    })
-  } else {
-    const results = await Transaction.find({ "receiver.number": parseInt(stk) })
-    res.json({
+    return res.json({
       success: true,
-      result: results,
+      message: "Tạo tài khoản thành công!",
+    })
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({
+      success: false,
+      message: error.toString(),
     })
   }
 })
-router.post("/sendHistory", async (req, res) => {
-  const { stk } = req.body
-
-  const account = await Account.findOne({ number: stk, isPayment: true })
-  if (account == null) {
-    res.json({
+router.post("/historySend", async (req, res) => {
+  try {
+    if (req.tokenPayload.type !== "employee") {
+      return res.status(400).json({
+        success: false,
+        message: "only employee!",
+      })
+    }
+    const { email } = req.body
+    const _transactionSender = await Transaction.find({ "sender.email": email })
+    if (!_transactionSender) {
+      return res.status(400).json({
+        success: false,
+        message: "Không có giao dịch chuyển khoản!",
+      })
+    }
+    return res.json({
+      success: true,
+      results: _transactionSender || [],
+    })
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({
       success: false,
-      message: "Tài khoản không tồn tại !",
+      message: error.toString(),
     })
   }
-
-  const senders = await Transaction.find({ "sender.number": parseInt(stk) })
-  return res.json({
-    success: true,
-    result: senders,
-  })
 })
-router.post("/debtHistory", async (req, res) => {
-  const { stk } = req.body
 
-  const account = await Account.findOne({ number: stk })
-  if (account == null) {
-    res.json({
+router.post("/historyReceive", async (req, res) => {
+  try {
+    if (req.tokenPayload.type !== "employee") {
+      return res.status(400).json({
+        success: false,
+        message: "only employee!",
+      })
+    }
+    const { email } = req.body
+    const _transactionReceiver = await Transaction.find({
+      "receiver.email": email,
+    })
+    if (!_transactionReceiver) {
+      return res.status(400).json({
+        success: false,
+        message: "Không có giao dịch nhận tiền!",
+      })
+    }
+    return res.json({
+      success: true,
+      results: _transactionReceiver || [],
+    })
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({
       success: false,
-      message: "Tài khoản không tồn tại !",
+      message: error.toString(),
     })
   }
+})
 
-  const from = await Debt.find({ fromAccount: stk, state: true })
-  const to = await Debt.find({ toAccount: stk, state: true })
-  return res.json({
-    success: true,
-    results: from.concat(to),
-  })
+router.post("/historyDept", async (req, res) => {
+  try {
+    if (req.tokenPayload.type !== "employee") {
+      return res.status(400).json({
+        success: false,
+        message: "only employee!",
+      })
+    }
+    const { email } = req.body
+    const _user = await User.findOne({ email })
+    if (!_user) {
+      return res.status(400).json({
+        success: false,
+        message: "Không tìm thầy tài khoản người dùng!",
+      })
+    }
+    let history_dept = []
+    const listAccounts = [_user.payment, ..._user.savings]
+    if (listAccounts && listAccounts.length > 0) {
+      for (let i = 0; i < listAccounts.length; i++) {
+        const _data = await Debt.find({ fromAccount: listAccounts[i], state: true })
+        if (_data && _data.length > 0) {
+          for (let j = 0; j < _data.length; j++) {
+            history_dept.push(_data[j])
+          }
+        }
+      }
+    }
+    return res.json({
+      success: true,
+      results: history_dept || [],
+    })
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({
+      success: false,
+      message: error.toString(),
+    })
+  }
 })
 module.exports = router
+
+// const _deptReceiver = await Debt.find({"receiver.email": email})
