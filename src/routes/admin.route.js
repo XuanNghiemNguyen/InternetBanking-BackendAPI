@@ -11,6 +11,7 @@ const TEAM29_API = require("../services/agribank")
 const { isTrustlyOTP } = require("../middlewares/auth")
 const { updateNotification } = require("../../socket")
 const { getRandomCode, getRandomPassword } = require("../common/index")
+const saltRounds = 10
 router.get("/getEmployee", async (req, res) => {
     try {
         const { email } = req.tokenPayload
@@ -91,11 +92,6 @@ router.post("/lockEmployee", async (req, res) => {
         else {
             emp.isEnabled = true;
         }
-
-
-        // emp.name = data.name
-        // emp.email = data.email
-        // emp.phone = data.phone
         await emp.save()
         return res.json({
             success: true,
@@ -114,61 +110,58 @@ router.post("/lockEmployee", async (req, res) => {
 })
 
 router.post("/addEmployee", async (req, res) => {
-    var { email, phone, name, password, pin } = req.body.data
-  var number
-  var check = true
-  const isAvailable = (await User.findOne({ email: email })) ? true : false
-  if (isAvailable == true) {
-    res.json({
-      success: false,
-      message: "Email này đã được sử dụng, vui lòng nhập email khác!",
-    })
-  } else {
-    while (check !== false) {
-      number = Math.floor(Math.random() * 1000000000) + 1000000000
-      check = (await Account.findOne({ number: number, isEnabled: true }))
-        ? true
-        : false
-    }
-
-    const account = {
-      number: number,
-      balance: 0,
-      isPayment: true,
-      isEnabled: true,
-      owner: email,
-      updatedAt: Date.now(),
-      createdAt: Date.now(),
-    }
-    bcrypt.hash(password, saltRounds, (err, hashpass) => {
-      bcrypt.hash(pin, saltRounds, (err, hashpin) => {
-        const user = {
-          type: "normal",
-          name: name,
-          email: email,
-          password: hashpass,
-          pin: hashpin,
-          phone: phone,
-          payment: number, //just one payment account
-          savings: [],
-          receivers: [],
-          refreshToken: randtoken.generate(80),
-          isEnabled: true,
-          isVerified: true,
-          updatedAt: Date.now(),
-          createdAt: Date.now(),
+    try {
+        if (req.tokenPayload.type !== "admin") {
+            return res.status(400).json({
+                success: false,
+                message: "only admin!",
+            })
         }
+        const { email, phone, name, password, pin } = req.body.data
+        const ts_now = Date.now()
+        const isAvailable = await User.findOne({ email })
+        if (isAvailable) {
+            return res.status(400).json({
+                success: false,
+                message: "Email này đã được sử dụng, vui lòng nhập email khác!",
+            })
+        }
+        let number = 0
+        let check = true
+        while (check) {
+            number = Math.floor(Math.random() * 1000000000) + 1000000000
+            check = (await Account.findOne({ number })) ? true : false
+        }
+        let account = new Account()
+        account.number = number
+        account.updatedAt = ts_now
+        account.createdAt = ts_now
+        account.owner = email
+        await account.save()
 
-        User.create(user, function (err, res) {
-          if (err) throw err
-        })
-        Account.create(account, function (err, res) {
-          if (err) throw err
-        })
-      })
-    })
+        let _user = new User()
+        _user.type = 'employee'
+        _user.name = name
+        _user.phone = phone
+        _user.email = email
+        const hash = bcrypt.hashSync(password, saltRounds)
+        _user.pin = pin
+        _user.password = hash
+        _user.payment = number
+        _user.updatedAt = ts_now
+        _user.createdAt = ts_now
+        await _user.save()
 
-    res.json({ results: "success!" })
-  }
+        return res.json({
+            success: true,
+            message: "Tạo tài khoản thành công!",
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            success: false,
+            message: error.toString(),
+        })
+    }
 })
 module.exports = router
