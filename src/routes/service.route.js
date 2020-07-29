@@ -7,7 +7,7 @@ const Notification = require("../models/notification")
 const { updateNotification } = require("../../socket")
 
 const getDateString = (ts) => {
-  const now = ts.toLocaleString("en-US", {
+  const now = (new Date(ts)).toLocaleString("en-US", {
     timeZone: "Asia/Ho_Chi_Minh",
   })
   const time = now.split(", ")[1]
