@@ -101,7 +101,6 @@ router.get("/getUserByEmail", async (req, res) => {
         message: "Email is required!",
       })
     }
-    console.log(email)
     const user = await User.find({ email: email, isEnabled: true })
     return res.json({
       success: true,
@@ -234,6 +233,12 @@ router.post("/receivers/add", async (req, res) => {
 
 router.post("/sendDebt", async (req, res) => {
   try {
+    if (req.tokenPayload.type !== "normal") {
+      return res.status(400).json({
+        success: false,
+        message: "only normal!",
+      })
+    }
     const { info } = req.body
 
     if (!info) {
@@ -271,6 +276,12 @@ router.post("/sendDebt", async (req, res) => {
 })
 router.post("/cancelDebt", async (req, res) => {
   try {
+    if (req.tokenPayload.type !== "normal") {
+      return res.status(400).json({
+        success: false,
+        message: "only normal!",
+      })
+    }
     const { info, email } = req.body
     if (!info) {
       return res.status(400).json({
@@ -334,8 +345,13 @@ router.post("/cancelDebt", async (req, res) => {
 })
 router.post("/payDebt", async (req, res) => {
   try {
+    if (req.tokenPayload.type !== "normal") {
+      return res.status(400).json({
+        success: false,
+        message: "only normal!",
+      })
+    }
     const { info } = req.body
-    console.log(info)
     if (!info) {
       return res.status(400).json({
         success: false,
@@ -497,6 +513,12 @@ router.get("/accountsByUser", async (req, res) => {
 
 router.post("/transfer", isTrustlyOTP, async (req, res) => {
   try {
+    if (req.tokenPayload.type !== "normal") {
+      return res.status(400).json({
+        success: false,
+        message: "only normal!",
+      })
+    }
     const { email } = req.tokenPayload
     let {
       numberSender,
@@ -660,6 +682,12 @@ router.get("/hhbank/getInfo", async (req, res) => {
 
 router.post("/hhbank/transfer", isTrustlyOTP, async (req, res) => {
   try {
+    if (req.tokenPayload.type !== "normal") {
+      return res.status(400).json({
+        success: false,
+        message: "only normal!",
+      })
+    }
     const { email } = req.tokenPayload
     let {
       numberSender,
@@ -806,6 +834,12 @@ router.get("/agribank/getInfo", async (req, res) => {
 
 router.post("/agribank/transfer", isTrustlyOTP, async (req, res) => {
   try {
+    if (req.tokenPayload.type !== "normal") {
+      return res.status(400).json({
+        success: false,
+        message: "only normal!",
+      })
+    }
     const { email } = req.tokenPayload
     let {
       numberSender,
