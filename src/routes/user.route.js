@@ -233,6 +233,7 @@ router.post("/receivers/add", async (req, res) => {
 
 router.post("/sendDebt", async (req, res) => {
   try {
+    const ts_now = Date.now()
     if (req.tokenPayload.type !== "normal") {
       return res.status(400).json({
         success: false,
@@ -249,7 +250,6 @@ router.post("/sendDebt", async (req, res) => {
     }
     const debt = await Debt.insertMany(info)
     const receiver = await Account.findOne({ number: info.toAccount })
-    const ts_now = Date.now()
     let notify = new Notification()
     notify.owner = receiver.owner
     notify.createdAt = notify.content = `Tài khoản SAC_${
@@ -276,6 +276,7 @@ router.post("/sendDebt", async (req, res) => {
 })
 router.post("/cancelDebt", async (req, res) => {
   try {
+    const ts_now = Date.now()
     if (req.tokenPayload.type !== "normal") {
       return res.status(400).json({
         success: false,
@@ -303,7 +304,6 @@ router.post("/cancelDebt", async (req, res) => {
 
     if (senderNumber.owner === email) {
       let notify = new Notification()
-      const ts_now = Date.now()
       notify.owner = receiverNumber.owner
       notify.createdAt = ts_now
       notify.content = `Tài khoản SAC_${
@@ -318,7 +318,6 @@ router.post("/cancelDebt", async (req, res) => {
     }
     if (receiverNumber.owner === email) {
       let notify = new Notification()
-      const ts_now = Date.now()
       notify.owner = senderNumber.owner
       notify.createdAt = ts_now
       notify.content = `Tài khoản SAC_${
@@ -345,6 +344,7 @@ router.post("/cancelDebt", async (req, res) => {
 })
 router.post("/payDebt", async (req, res) => {
   try {
+    const ts_now = Date.now()
     if (req.tokenPayload.type !== "normal") {
       return res.status(400).json({
         success: false,
@@ -374,7 +374,7 @@ router.post("/payDebt", async (req, res) => {
     const debt = await Debt.findOne(info)
     console.log(debt)
     debt.state = true
-    debt.paidAt = +new Date()
+    debt.paidAt = ts_now
     debt.save()
     let notify = new Notification()
     notify.owner = fromAccount.owner
