@@ -164,4 +164,34 @@ router.post("/addEmployee", async (req, res) => {
         })
     }
 })
+
+router.post("/changePasswordEmployee", async (req, res) => {
+    try {
+      const { data } = req.body;
+      if (!data) {
+        return res.status(400).json({
+          success: false,
+          message: "Employee info is required ",
+        });
+      }
+      const newPassword = data.newPassword;
+      const hash = bcrypt.hashSync(newPassword, saltRounds);
+      const emp = await User.findOne({ _id: data.id });
+      emp.password = hash;
+      await emp.save();
+      return res.json({
+        success: true,
+        results: {
+          success: "true",
+          results: emp,
+        },
+      });
+    } catch (error) {
+      console.log(err);
+      return res.status(500).json({
+        success: false,
+        message: err.toString(),
+      });
+    }
+  });
 module.exports = router
