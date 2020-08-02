@@ -14,7 +14,7 @@ const { updateNotification } = require("../../socket")
 // const { TooManyRequests } = require('http-errors')
 
 const getDateString = (ts) => {
-  const now = (new Date(ts)).toLocaleString("en-US", {
+  const now = new Date(ts).toLocaleString("en-US", {
     timeZone: "Asia/Ho_Chi_Minh",
   })
   const time = now.split(", ")[1]
@@ -35,53 +35,6 @@ router.get("/getListAccount", async (req, res) => {
     return res.json({
       success: true,
       results: accounts,
-    })
-  } catch (err) {
-    console.log(err)
-    return res.status(500).json({
-      success: false,
-      message: err.toString(),
-    })
-  }
-})
-
-router.post("/getReportTransaction", async (req, res) => {
-  try {
-    const {type} = req.tokenPayload
-    if (!type || type !== 'admin') {
-      return res.status(400).json({
-        success: false,
-        message: "only admin!",
-      })
-    }
-    const { timeStart, timeEnd, bankName } = req.body
-    if (!bankName || !timeStart || !timeEnd) {
-      return res.status(400).json({
-        success: false,
-        message: "bankName, timeStart, timeEnd are required!",
-      })
-    }
-    let transactions = []
-    if (bankName === "ALL") {
-      transactions = await Transaction.find({
-        partner: { $ne: "SACOMBANK" },
-        createdAt: {
-          $gte: timeStart,
-          $lt: timeEnd,
-        },
-      })
-    } else {
-      transactions = await Transaction.find({
-        partner: bankName,
-        createdAt: {
-          $gte: timeStart,
-          $lt: timeEnd,
-        },
-      })
-    }
-    return res.json({
-      success: true,
-      results: transactions,
     })
   } catch (err) {
     console.log(err)
@@ -252,7 +205,8 @@ router.post("/sendDebt", async (req, res) => {
     const receiver = await Account.findOne({ number: info.toAccount })
     let notify = new Notification()
     notify.owner = receiver.owner
-    notify.createdAt = notify.content = `Tài khoản SAC_${
+    notify.createdAt = ts_now
+    notify.content = `Tài khoản SAC_${
       info.fromAccount
     } vừa gửi nhắc nợ cho tài khoản SAC_${
       info.toAccount
@@ -261,7 +215,6 @@ router.post("/sendDebt", async (req, res) => {
     )}, xem thông tin chi tiết tại mục Danh sách nhắc nợ`
     await notify.save()
     updateNotification()
-    console.log(receiver)
     return res.json({
       success: true,
       debt: debt,
@@ -362,20 +315,20 @@ router.post("/payDebt", async (req, res) => {
       number: parseInt(info.fromAccount),
     })
     fromAccount.balance = fromAccount.balance + parseInt(info.amount)
-    fromAccount.save()
+    await fromAccount.save()
 
     const toAccount = await Account.findOne({
       number: parseInt(info.toAccount),
     })
     toAccount.balance =
       toAccount.balance - parseInt(info.amount) - parseInt(info.fee)
-    toAccount.save()
+    await toAccount.save()
 
     const debt = await Debt.findOne(info)
     console.log(debt)
     debt.state = true
     debt.paidAt = ts_now
-    debt.save()
+    await debt.save()
     let notify = new Notification()
     notify.owner = fromAccount.owner
     notify.content = `Tài khoản SAC_${
@@ -602,7 +555,6 @@ router.post("/transfer", isTrustlyOTP, async (req, res) => {
     report.createdAt = ts_now
     report.amount = amount
     report.isSenderPaidFee = !!isSenderPaidFee
-    report.createdAt = ts_now
     await report.save()
     let notify = new Notification()
     notify.owner = receiver.owner
