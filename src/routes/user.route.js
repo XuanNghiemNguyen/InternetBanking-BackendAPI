@@ -626,7 +626,12 @@ router.post("/transfer", isTrustlyOTP, async (req, res) => {
 })
 router.get("/getTransaction", async (req, res) => {
   try {
-    const transaction = await Transaction.find()
+    const transaction = await Transaction.find({
+      createdAt: {
+        $gte: (new Date(ts_now.getFullYear(), ts_now.getMonth() -1, ts_now.getDate())).getTime(),
+        $lt: Date.now()
+      },
+    })
     if (transaction) {
       return res.json({
         success: true,
