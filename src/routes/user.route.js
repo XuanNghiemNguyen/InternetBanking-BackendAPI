@@ -585,10 +585,10 @@ router.get("/getTransaction", async (req, res) => {
         $lt: Date.now()
       },
     })
-    if (transaction) {
+    if (transaction && transaction.length) {
       return res.json({
         success: true,
-        transaction: transaction,
+        transaction: transaction.reverse(),
       })
     } else {
       return res.status(400).json({
