@@ -578,6 +578,7 @@ router.post("/transfer", isTrustlyOTP, async (req, res) => {
 })
 router.get("/getTransaction", async (req, res) => {
   try {
+    const ts_now = new Date()
     const transaction = await Transaction.find({
       createdAt: {
         $gte: (new Date(ts_now.getFullYear(), ts_now.getMonth() -1, ts_now.getDate())).getTime(),
@@ -595,7 +596,7 @@ router.get("/getTransaction", async (req, res) => {
         message: "transaction not found",
       })
     }
-  } catch (error) {
+  } catch (err) {
     console.log(err)
     return res.status(500).json({
       success: false,
