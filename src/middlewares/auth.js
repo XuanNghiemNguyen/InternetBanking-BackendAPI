@@ -9,13 +9,13 @@ const isAuthenticated = (req, res, next) => {
     jwt.verify(token, process.env.JWT_KEY, async (err, payload) => {
       if (err) {
         if (err.message === 'jwt expired') {
-          return res.status(421).json({
+          return res.status(400).json({
             code: 421,
             success: false,
             message: 'Access-token hết hạn sử dụng!',
           })
         } else {
-          return res.status(421).json({
+          return res.status(400).json({
             code: 425,
             success: false,
             message: 'Access-token không hợp lệ!',
@@ -26,7 +26,11 @@ const isAuthenticated = (req, res, next) => {
       const { userId } = payload
       const user = await User.findById(userId)
       if (!user || !user.isEnabled) {
-        return next(createError(401, 'this account not found or was blocked!'))
+        return res.status(400).json({
+          code: 411,
+          success: false,
+          message: 'Tài khoản này đã bị khóa, vui lòng liên hệ quản trị viên!'
+        })
       }
       req.tokenPayload.email = user.email
       next()
